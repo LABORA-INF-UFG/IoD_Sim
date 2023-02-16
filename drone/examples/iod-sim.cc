@@ -216,7 +216,8 @@ Scenario::MetricsHandler (nlohmann::json *jout, ns3::FlowMonitorHelper *flowmon,
 
   std::cout << "=========== TIME: " << time << " ===========" << std::endl;
 
-  Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier> ((*flowmon).GetClassifier ());
+  Ptr<Ipv4FlowClassifier> classifier =
+      DynamicCast<Ipv4FlowClassifier> ((*flowmon).GetClassifier ());
   std::map<FlowId, FlowMonitor::FlowStats> stats = (*monitor)->GetFlowStats ();
 
   for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator iter = stats.begin ();
@@ -263,20 +264,20 @@ Scenario::MetricsHandler (nlohmann::json *jout, ns3::FlowMonitorHelper *flowmon,
                       1024;
 
       (*jout).push_back (nlohmann::json::object ({{"time", time},
-                                               {"drone",
-                                                {{"id", iter->first},
-                                                 {"metrics",
-                                                  {{"src-addr", srcAddr.str ()},
-                                                   {"dst-addr", dstAddr.str ()},
-                                                   {"sent-pck", sentPck.str ()},
-                                                   {"received-pck", recvPck.str ()},
-                                                   {"lost-pck", lostPck.str ()},
-                                                   {"pck-delivery-ratio", pckDelRatio.str ()},
-                                                   {"delay", delay.str ()},
-                                                   {"jitter", jitter.str ()},
-                                                   {"throughput-kbps", thrgKbps.str ()}}},
-                                                 {"location", "TODO"},
-                                                 {"battery", "TODO"}}}}));
+                                                  {"drone",
+                                                   {{"id", iter->first},
+                                                    {"metrics",
+                                                     {{"src-addr", srcAddr.str ()},
+                                                      {"dst-addr", dstAddr.str ()},
+                                                      {"sent-pck", sentPck.str ()},
+                                                      {"received-pck", recvPck.str ()},
+                                                      {"lost-pck", lostPck.str ()},
+                                                      {"pck-delivery-ratio", pckDelRatio.str ()},
+                                                      {"delay", delay.str ()},
+                                                      {"jitter", jitter.str ()},
+                                                      {"throughput-kbps", thrgKbps.str ()}}},
+                                                    {"location", "TODO"},
+                                                    {"battery", "TODO"}}}}));
 
       // sum to total
       // SentPackets = SentPackets + (iter->second.txPackets);
@@ -308,6 +309,17 @@ Scenario::MetricsHandler (nlohmann::json *jout, ns3::FlowMonitorHelper *flowmon,
   // std::cout << jout.dump (4) << std::endl;
   // --
 
+  // test drone energy source
+  // for (auto drone = m_drones.Begin (); drone != m_drones.End (); drone++)
+  //   drone->getEnergySource();
+
+  for (uint32_t i = 0; i < m_drones.GetN (); i++)
+    (*jout).push_back (nlohmann::json::object({
+      {"time", time},
+      {"drone_id", i},
+      {"remaining-energy", (m_drones.Get(i))->getEnergySource()->GetRemainingEnergy()}
+    }));
+
   Simulator::Schedule (Seconds (1.0), &Scenario::MetricsHandler, this, jout, flowmon, monitor, Simulator::Now ().GetSeconds ());
 }
 
@@ -333,7 +345,8 @@ Scenario::operator() ()
 
   // schedule metricshandler
   nlohmann::json jout;
-  Simulator::Schedule (Seconds (1.0), &Scenario::MetricsHandler, this, &jout, &flowmon, &monitor, Simulator::Now ().GetSeconds ());
+  Simulator::Schedule (Seconds (1.0), &Scenario::MetricsHandler, this, &jout, &flowmon, &monitor,
+                       Simulator::Now ().GetSeconds ());
 
   Simulator::Run ();
   // Report Module needs the simulator context alive to introspect it

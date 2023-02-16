@@ -26,6 +26,8 @@
 #include <ns3/ptr.h>
 #include <ns3/net-device.h>
 #include "drone-peripheral-container.h"
+//my edit
+#include <ns3/energy-source.h>
 
 namespace ns3 {
 
@@ -72,6 +74,13 @@ public:
   void setDragCoefficient (double coefficient);
 
   /**
+   * \brief Sets the energy source.
+   *
+   * \param energySource EnergySource of drone.
+   */
+  void setEnergySource (Ptr<EnergySource> energySource);
+
+  /**
    * \brief Returns the mass of the drone.
    *
    * \returns Mass of the drone.
@@ -106,6 +115,13 @@ public:
    */
   Ptr<DronePeripheralContainer> getPeripherals ();
 
+  /**
+   * \brief Returns the energy source of the drone.
+   *
+   * \returns energy source Pointer to a EnergyModel.
+   */
+  Ptr<EnergySource> getEnergySource ();
+
 protected:
   virtual void DoDispose (void);
   virtual void DoInitialize (void);
@@ -117,6 +133,8 @@ private:
   double m_airDensity; //!< Air density
   double m_dragCoefficient; //!< Drag Coefficient
   Ptr<DronePeripheralContainer> m_peripheralContainer;
+  // my edit
+  Ptr<EnergySource> m_energySource;
 };
 
 } //namespace ns3
