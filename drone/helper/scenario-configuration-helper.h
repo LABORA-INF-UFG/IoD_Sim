@@ -63,7 +63,7 @@ public:
    * \param argc The number of command line arguments.
    * \param argv The list of command line arguments.
    */
-  void Initialize (int argc, char ** argv);
+  void Initialize (std::string req_body);
 
   /**
    * \brief Bootstrap Singleton with basic data.
@@ -72,7 +72,7 @@ public:
    * \param argv The list of command line arguments.
    * \param name The name of the scenario.
    */
-  void Initialize (int argc, char ** argv, const std::string name);
+  // void Initialize (int argc, char ** argv, const std::string name);
 
   /**
    * \return The name of the scenario.
@@ -443,7 +443,7 @@ private:
    * \param argc the command line argument count number.
    * \param argv the list of command line arguments
    */
-  void InitializeConfiguration (int argc, char **argv);
+  void InitializeConfiguration (std::string req_body);
   /**
    * \brief part of the destructor, it releases any pointer bound to the command line and JSON files.
    */

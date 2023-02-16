@@ -136,9 +136,18 @@ set(header_files
   model/tcp-storage-client-application.h
   model/tcp-stub-client-application.h
   model/udp-echo-client-application.h
+  model/time-series-metrics.h
 )
 
 include(FindPkgConfig)
+add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY) # crow
+find_package(Crow REQUIRED)                     # crow
+
+include(FetchContent)
+FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz)
+FetchContent_MakeAvailable(json)
+# find_package(nlohmann_json 3.2.0 REQUIRED)      # modern json
+
 
 if (${PKG_CONFIG_FOUND})
   pkg_check_modules(THIRD_PARTY RapidJSON REQUIRED)
@@ -146,7 +155,10 @@ if (${PKG_CONFIG_FOUND})
   pkg_check_modules(THIRD_PARTY libxml-2.0 REQUIRED)
 
   include_directories(${RapidJSON_INCLUDE_DIRS}
-                      ${gsl_INCLUDE_DIRS})
+                      ${gsl_INCLUDE_DIRS}
+                      ${Crow_INCLUDE_DIRS} # crow
+                      ${nlohmann_json_INCLUDE_DIRS} # crow
+                    )
 
   build_lib(
     LIBNAME drone
@@ -164,5 +176,8 @@ if (${PKG_CONFIG_FOUND})
                       ${libmobility}
                       ${RapidJSON_LIBRARIES}
                       ${gsl_LIBRARIES}
+                      ${Crow_LIBRARIES} # crow
+                      ${libflow-monitor} # flow-monitor
+                      ${nlohmann_json_LIBRARIES} # crow
   )
 endif()

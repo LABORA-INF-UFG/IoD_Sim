@@ -18,7 +18,7 @@
 #include "scenario-configuration-helper.h"
 
 #include <chrono>
-#include <iomanip>  /* put_time */
+#include <iomanip> /* put_time */
 #include <iostream>
 
 #include <rapidjson/filereadstream.h>
@@ -40,57 +40,53 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE_MASK ("ScenarioConfigurationHelper", LOG_PREFIX_ALL);
 
 void
-ScenarioConfigurationHelper::Initialize (int argc,
-                                         char **argv)
+ScenarioConfigurationHelper::Initialize (std::string req_body)
 {
   auto now = std::chrono::system_clock::now ();
-  auto in_time_t = std::chrono::system_clock::to_time_t(now);
+  auto in_time_t = std::chrono::system_clock::to_time_t (now);
   std::stringstream dateTime;
 
   dateTime << std::put_time (std::localtime (&in_time_t), "%Y-%m-%d.%H-%M-%S");
 
   m_dateTime = dateTime.str ();
 
-  InitializeConfiguration (argc, argv);
+  InitializeConfiguration (req_body);
   InitializeLogging (GetLogOnFile ());
 }
 
-void
-ScenarioConfigurationHelper::Initialize (int argc,
-                                         char **argv,
-                                         const std::string name)
-{
-  auto now = std::chrono::system_clock::now ();
-  auto in_time_t = std::chrono::system_clock::to_time_t (now);
-  std::stringstream dateTime;
+// void
+// ScenarioConfigurationHelper::Initialize (int argc, char **argv, const std::string name)
+// {
+//   auto now = std::chrono::system_clock::now ();
+//   auto in_time_t = std::chrono::system_clock::to_time_t (now);
+//   std::stringstream dateTime;
 
-  dateTime << std::put_time (std::localtime (&in_time_t), "%Y-%m-%d-%H-%M-%S");
+//   dateTime << std::put_time (std::localtime (&in_time_t), "%Y-%m-%d-%H-%M-%S");
 
-  m_dateTime = dateTime.str ();
-  m_name = name;
+//   m_dateTime = dateTime.str ();
+//   m_name = name;
 
-  InitializeConfiguration (argc, argv);
-  InitializeLogging (GetLogOnFile ());
-}
+//   InitializeConfiguration (argc, argv);
+//   InitializeLogging (GetLogOnFile ());
+// }
 
 ScenarioConfigurationHelper::~ScenarioConfigurationHelper ()
 {
   DisposeLogging ();
-  DisposeConfiguration ();
+  // DisposeConfiguration ();
 }
 
 const std::string
 ScenarioConfigurationHelper::GetName ()
 {
-  if (m_name.empty())
+  if (m_name.empty ())
     {
       NS_ASSERT_MSG (m_config.HasMember ("name"),
-                    "Please define scenario 'name' in configuration file.");
-      NS_ASSERT_MSG (m_config["name"].IsString(),
-                    "Scenario 'name' must be a String.");
+                     "Please define scenario 'name' in configuration file.");
+      NS_ASSERT_MSG (m_config["name"].IsString (), "Scenario 'name' must be a String.");
 
       m_name = m_config["name"].GetString ();
-      NS_ASSERT_MSG (!m_name.empty(), "Scenario 'name' must be non empty.");
+      NS_ASSERT_MSG (!m_name.empty (), "Scenario 'name' must be non empty.");
     }
 
   return m_name;
@@ -107,15 +103,11 @@ ScenarioConfigurationHelper::GetResultsPath ()
 {
   NS_ASSERT_MSG (m_config.HasMember ("resultsPath"),
                  "Please define 'resultsPath' in configuration file.");
-  NS_ASSERT_MSG (m_config["resultsPath"].IsString (),
-                 "'resultsPath' must be a string.");
+  NS_ASSERT_MSG (m_config["resultsPath"].IsString (), "'resultsPath' must be a string.");
 
   std::stringstream path;
 
-  path << m_config["resultsPath"].GetString ()
-       << "/"
-       << GetName () << "-"
-       << m_dateTime;
+  path << m_config["resultsPath"].GetString () << "/" << GetName () << "-" << m_dateTime;
 
   SystemPath::MakeDirectories (path.str ());
 
@@ -146,10 +138,9 @@ ScenarioConfigurationHelper::GetStaticConfig ()
 
       std::vector<std::pair<std::string, std::string>> staticConfigsDecoded = {};
       const auto staticConfigsArr = m_config["staticNs3Config"].GetArray ();
-      for (auto& sc : staticConfigsArr)
+      for (auto &sc : staticConfigsArr)
         {
-          NS_ASSERT_MSG (sc.IsObject (),
-                        "A static config definition is invalid.");
+          NS_ASSERT_MSG (sc.IsObject (), "A static config definition is invalid.");
 
           const auto obj = sc.GetObject ();
           NS_ASSERT_MSG (obj.HasMember ("name"),
@@ -158,9 +149,9 @@ ScenarioConfigurationHelper::GetStaticConfig ()
                          "'name' property must be a string in staticNs3Config definition.");
           NS_ASSERT_MSG (obj.HasMember ("value"),
                          "'value' is required in staticNs3Config definiton.");
-          NS_ASSERT_MSG (obj["value"].IsString () || obj["value"].IsNumber (),
-                         "'value' property must be a string or a number in staticNs3Config definition.");
-
+          NS_ASSERT_MSG (
+              obj["value"].IsString () || obj["value"].IsNumber (),
+              "'value' property must be a string or a number in staticNs3Config definition.");
 
           std::stringstream value;
           if (obj["value"].IsDouble ())
@@ -170,10 +161,7 @@ ScenarioConfigurationHelper::GetStaticConfig ()
           else if (obj["value"].IsString ())
             value << obj["value"].GetString ();
 
-          staticConfigsDecoded.push_back({
-            obj["name"].GetString (),
-            value.str ()
-          });
+          staticConfigsDecoded.push_back ({obj["name"].GetString (), value.str ()});
         }
 
       m_staticConfig = staticConfigsDecoded;
@@ -187,12 +175,11 @@ ScenarioConfigurationHelper::GetPhyLayers () const
 {
   NS_ASSERT_MSG (m_config.HasMember ("phyLayer"),
                  "Please define phyLayer in your JSON configuration.");
-  NS_ASSERT_MSG (m_config["phyLayer"].IsArray (),
-                 "'phyLayer' property must be an array.");
+  NS_ASSERT_MSG (m_config["phyLayer"].IsArray (), "'phyLayer' property must be an array.");
 
   const auto arr = m_config["phyLayer"].GetArray ();
   std::vector<Ptr<PhyLayerConfiguration>> phyConfs;
-  for(auto& el : arr)
+  for (auto &el : arr)
     {
       auto conf = PhyLayerConfigurationHelper::GetConfiguration (el);
       phyConfs.emplace_back (conf);
@@ -202,16 +189,15 @@ ScenarioConfigurationHelper::GetPhyLayers () const
 }
 
 const std::vector<Ptr<MacLayerConfiguration>>
-ScenarioConfigurationHelper::GetMacLayers ()const
+ScenarioConfigurationHelper::GetMacLayers () const
 {
   NS_ASSERT_MSG (m_config.HasMember ("macLayer"),
                  "Please define macLayer in your JSON configuration.");
-  NS_ASSERT_MSG (m_config["macLayer"].IsArray (),
-                 "'macLayer' property must be an array.");
+  NS_ASSERT_MSG (m_config["macLayer"].IsArray (), "'macLayer' property must be an array.");
 
   const auto arr = m_config["macLayer"].GetArray ();
   std::vector<Ptr<MacLayerConfiguration>> macConfs;
-  for(auto& el : arr)
+  for (auto &el : arr)
     {
       auto conf = MacLayerConfigurationHelper::GetConfiguration (el);
       macConfs.emplace_back (conf);
@@ -225,12 +211,11 @@ ScenarioConfigurationHelper::GetNetworkLayers () const
 {
   NS_ASSERT_MSG (m_config.HasMember ("networkLayer"),
                  "Please define 'networkLayer' in your JSON configuration.");
-  NS_ASSERT_MSG (m_config["networkLayer"].IsArray (),
-                 "'networkLayer' property must be an array.");
+  NS_ASSERT_MSG (m_config["networkLayer"].IsArray (), "'networkLayer' property must be an array.");
 
   const auto arr = m_config["networkLayer"].GetArray ();
   std::vector<Ptr<NetworkLayerConfiguration>> netConfs;
-  for(auto& el : arr)
+  for (auto &el : arr)
     {
       auto conf = NetworkLayerConfigurationHelper::GetConfiguration (el);
       netConfs.emplace_back (conf);
@@ -240,9 +225,9 @@ ScenarioConfigurationHelper::GetNetworkLayers () const
 }
 
 const std::vector<Ptr<EntityConfiguration>>
-ScenarioConfigurationHelper::GetEntitiesConfiguration (const std::string& entityKey) const
+ScenarioConfigurationHelper::GetEntitiesConfiguration (const std::string &entityKey) const
 {
-  const char* entityKeyCStr = entityKey.c_str ();
+  const char *entityKeyCStr = entityKey.c_str ();
   NS_ASSERT_MSG (m_config.HasMember (entityKeyCStr),
                  "Please define " << entityKey << " in your JSON configuration.");
   NS_ASSERT_MSG (m_config[entityKeyCStr].IsArray (),
@@ -251,7 +236,7 @@ ScenarioConfigurationHelper::GetEntitiesConfiguration (const std::string& entity
   const auto arr = m_config[entityKeyCStr].GetArray ();
   std::vector<Ptr<EntityConfiguration>> entityConf;
 
-  for (auto& el : arr)
+  for (auto &el : arr)
     {
       auto conf = EntityConfigurationHelper::GetConfiguration (el);
       entityConf.push_back (conf);
@@ -268,11 +253,10 @@ ScenarioConfigurationHelper::GetRemotesConfiguration () const
   if (!m_config.HasMember ("remotes"))
     return remoteConf;
 
-  NS_ASSERT_MSG (m_config["remotes"].IsArray (),
-                 "JSON property 'remotes' must be an array.");
+  NS_ASSERT_MSG (m_config["remotes"].IsArray (), "JSON property 'remotes' must be an array.");
 
   const auto arr = m_config["remotes"].GetArray ();
-  for (auto& el : arr)
+  for (auto &el : arr)
     {
       auto conf = RemoteConfigurationHelper::GetConfiguration (el);
       remoteConf.push_back (conf);
@@ -290,11 +274,14 @@ ScenarioConfigurationHelper::GetDuration () const
 
   double duration = 0.0;
 
-  if (m_config["duration"].IsUint ()) {
-    duration = static_cast<double> (m_config["duration"].GetUint ());
-  } else {
-    duration = m_config["duration"].GetDouble ();
-  }
+  if (m_config["duration"].IsUint ())
+    {
+      duration = static_cast<double> (m_config["duration"].GetUint ());
+    }
+  else
+    {
+      duration = m_config["duration"].GetDouble ();
+    }
 
   return duration;
 }
@@ -302,8 +289,8 @@ ScenarioConfigurationHelper::GetDuration () const
 const std::string
 ScenarioConfigurationHelper::GetPhyPropagationLossModel () const
 {
-  constexpr const char* jRootKey = "phyPropagationLoss";
-  constexpr const char* jModelKey = "model";
+  constexpr const char *jRootKey = "phyPropagationLoss";
+  constexpr const char *jModelKey = "model";
 
   NS_ASSERT (m_config.HasMember (jRootKey));
   NS_ASSERT_MSG (m_config[jRootKey].IsObject (),
@@ -316,11 +303,11 @@ ScenarioConfigurationHelper::GetPhyPropagationLossModel () const
   return m_config[jRootKey][jModelKey].GetString ();
 }
 
-const std::vector<std::pair<std::string, float> >
+const std::vector<std::pair<std::string, float>>
 ScenarioConfigurationHelper::GetThreeLogDistancePropagationLossModelAttributes () const
 {
-  constexpr const char* jRootKey = "phyPropagationLoss";
-  constexpr const char* jAttrKey = "attributes";
+  constexpr const char *jRootKey = "phyPropagationLoss";
+  constexpr const char *jAttrKey = "attributes";
 
   NS_ASSERT (m_config.HasMember (jRootKey));
   NS_ASSERT_MSG (m_config[jRootKey].IsObject (),
@@ -333,23 +320,19 @@ ScenarioConfigurationHelper::GetThreeLogDistancePropagationLossModelAttributes (
   const auto jAttrArr = m_config[jRootKey][jAttrKey].GetArray ();
 
   // check if we have an array of objects
-  for (auto& el : jAttrArr)
+  for (auto &el : jAttrArr)
     {
-      NS_ASSERT_MSG (el.IsObject (),
-                    jAttrKey << " must be a valid array of objects.");
+      NS_ASSERT_MSG (el.IsObject (), jAttrKey << " must be a valid array of objects.");
 
-      NS_ASSERT_MSG (el.HasMember ("key")
-                     && el["key"].IsString ()
-                     && el.HasMember ("value")
-                     && !el["value"].IsArray ()
-                     && !el["value"].IsObject (),
+      NS_ASSERT_MSG (el.HasMember ("key") && el["key"].IsString () && el.HasMember ("value") &&
+                         !el["value"].IsArray () && !el["value"].IsObject (),
                      jAttrKey << " contains a malformed structure.");
     }
 
   // "safe" to decode the data
-  std::vector<std::pair<std::string, float> > attrList;
+  std::vector<std::pair<std::string, float>> attrList;
 
-  for (auto& el : jAttrArr)
+  for (auto &el : jAttrArr)
     {
       const std::string attrKey = el["key"].GetString ();
       const float attrVal = el["value"].GetFloat ();
@@ -363,8 +346,7 @@ ScenarioConfigurationHelper::GetThreeLogDistancePropagationLossModelAttributes (
 const std::string
 ScenarioConfigurationHelper::GetPhyMode () const
 {
-  NS_ASSERT_MSG (m_config.HasMember ("phyMode")
-                 && m_config["phyMode"].IsString (),
+  NS_ASSERT_MSG (m_config.HasMember ("phyMode") && m_config["phyMode"].IsString (),
                  "Please define phyMode in configuration file.");
 
   return m_config["phyMode"].GetString ();
@@ -384,8 +366,8 @@ ScenarioConfigurationHelper::GetDronesN () const
 const std::string
 ScenarioConfigurationHelper::GetDronesMobilityModel () const
 {
-  NS_ASSERT_MSG (m_config.HasMember ("dronesMobilityModel")
-                 && m_config["dronesMobilityModel"].IsString (),
+  NS_ASSERT_MSG (m_config.HasMember ("dronesMobilityModel") &&
+                     m_config["dronesMobilityModel"].IsString (),
                  "Please define dronesMobilityModel in configuration file.");
 
   return m_config["dronesMobilityModel"].GetString ();
@@ -395,7 +377,8 @@ void
 ScenarioConfigurationHelper::GetDronesPosition (Ptr<ListPositionAllocator> allocator) const
 {
   NS_ASSERT_MSG (GetDronesMobilityModel () == "ns3::ConstantPositionMobilityModel",
-                 "Drones position parameter can be used only when dronesMobilityModel is ns3::ConstantPositionMobilityModel");
+                 "Drones position parameter can be used only when dronesMobilityModel is "
+                 "ns3::ConstantPositionMobilityModel");
 
   for (uint32_t i = 0; i < m_config["drones"].GetArray ().Size (); ++i)
     {
@@ -412,35 +395,33 @@ ScenarioConfigurationHelper::GetDroneWaypoints (uint32_t i) const
                  "Waypoints are usable only with ns3::WaypointMobilityModel");
 
   const auto drones = m_config["drones"].GetArray ();
-  const auto drone  = drones[i].GetObject ();
+  const auto drone = drones[i].GetObject ();
 
   std::vector<Waypoint> waypoints;
 
   Time prevTime = Seconds (0);
 
-  for (auto point = drone["trajectory"].Begin ();
-       point != drone["trajectory"].End ();
-       point++)
+  for (auto point = drone["trajectory"].Begin (); point != drone["trajectory"].End (); point++)
     {
       NS_ASSERT_MSG (point->IsObject (),
                      "Each waypoint in drone trajectory must be a JSON object.");
-      NS_ASSERT_MSG (point->HasMember ("position")
-                     && (*point)["position"].IsArray ()
-                     && (*point)["position"][0].IsDouble ()
-                     && (*point)["position"][1].IsDouble ()
-                     && (*point)["position"][2].IsDouble ()
-                     && point->HasMember ("time")
-                     && (*point)["time"].IsDouble (),
-                     "Cannot decode waypoint, please check that each point in trajectory has at least position and time.");
+      NS_ASSERT_MSG (point->HasMember ("position") && (*point)["position"].IsArray () &&
+                         (*point)["position"][0].IsDouble () &&
+                         (*point)["position"][1].IsDouble () &&
+                         (*point)["position"][2].IsDouble () && point->HasMember ("time") &&
+                         (*point)["time"].IsDouble (),
+                     "Cannot decode waypoint, please check that each point in trajectory has at "
+                     "least position and time.");
 
       Time time = Seconds ((*point)["time"].GetDouble ());
 
-      NS_ASSERT_MSG (time >= prevTime,
-                     "Check waypoints, time of a waypoint must be greater or equal to the previous");
+      NS_ASSERT_MSG (
+          time >= prevTime,
+          "Check waypoints, time of a waypoint must be greater or equal to the previous");
 
-      Vector position = Vector ({(*point)["position"][0].GetDouble (),
-                                 (*point)["position"][1].GetDouble (),
-                                 (*point)["position"][2].GetDouble ()});
+      Vector position =
+          Vector ({(*point)["position"][0].GetDouble (), (*point)["position"][1].GetDouble (),
+                   (*point)["position"][2].GetDouble ()});
 
       waypoints.emplace_back (Waypoint (time, position));
 
@@ -470,24 +451,20 @@ ScenarioConfigurationHelper::GetDroneFlightPlan (uint32_t i) const
   // checks for drones were already made in ::ConfGetNumDrones.
   // Let's skip them.
   const auto drones = m_config["drones"].GetArray ();
-  const auto drone  = drones[i].GetObject ();
+  const auto drone = drones[i].GetObject ();
 
   FlightPlan flightPlan;
 
-  for (auto point = drone["trajectory"].Begin ();
-       point != drone["trajectory"].End ();
-       point++)
+  for (auto point = drone["trajectory"].Begin (); point != drone["trajectory"].End (); point++)
     {
-      NS_ASSERT_MSG (point->IsObject (),
-                     "Each point in drone must be a JSON object.");
-      NS_ASSERT_MSG (point->HasMember ("position")
-                     && (*point)["position"].IsArray ()
-                     && (*point)["position"][0].IsDouble ()
-                     && (*point)["position"][1].IsDouble ()
-                     && (*point)["position"][2].IsDouble ()
-                     && point->HasMember ("interest")
-                     && (*point)["interest"].IsUint (),
-                     "Cannot decode trajectory, please check that each point has at least position and interest.");
+      NS_ASSERT_MSG (point->IsObject (), "Each point in drone must be a JSON object.");
+      NS_ASSERT_MSG (point->HasMember ("position") && (*point)["position"].IsArray () &&
+                         (*point)["position"][0].IsDouble () &&
+                         (*point)["position"][1].IsDouble () &&
+                         (*point)["position"][2].IsDouble () && point->HasMember ("interest") &&
+                         (*point)["interest"].IsUint (),
+                     "Cannot decode trajectory, please check that each point has at least position "
+                     "and interest.");
 
       // restTime is optional
       double restTime = 0.0;
@@ -498,11 +475,11 @@ ScenarioConfigurationHelper::GetDroneFlightPlan (uint32_t i) const
         }
 
       auto protoPoint = CreateObjectWithAttributes<ProtoPoint> (
-        "Position", VectorValue ({(*point)["position"][0].GetDouble (),
-                                  (*point)["position"][1].GetDouble (),
-                                  (*point)["position"][2].GetDouble ()}),
-        "Interest", IntegerValue ((*point)["interest"].GetUint ()),
-        "RestTime", TimeValue (Seconds (restTime)));
+          "Position",
+          VectorValue ({(*point)["position"][0].GetDouble (), (*point)["position"][1].GetDouble (),
+                        (*point)["position"][2].GetDouble ()}),
+          "Interest", IntegerValue ((*point)["interest"].GetUint ()), "RestTime",
+          TimeValue (Seconds (restTime)));
 
       flightPlan.Add (protoPoint);
     }
@@ -516,10 +493,9 @@ ScenarioConfigurationHelper::GetDroneAcceleration (uint32_t i) const
   // checks for drones were already made in ::ConfGetNumDrones.
   // Let's skip them.
   const auto drones = m_config["drones"].GetArray ();
-  const auto drone  = drones[i].GetObject ();
+  const auto drone = drones[i].GetObject ();
 
-  NS_ASSERT_MSG (drone.HasMember ("acceleration")
-                 && drone["acceleration"].IsDouble (),
+  NS_ASSERT_MSG (drone.HasMember ("acceleration") && drone["acceleration"].IsDouble (),
                  "Every done must have defined the parameter \"acceleration\".");
 
   return drone["acceleration"].GetDouble ();
@@ -531,10 +507,9 @@ ScenarioConfigurationHelper::GetDroneMaxSpeed (uint32_t i) const
   // checks for drones were already made in ::ConfGetNumDrones.
   // Let's skip them.
   const auto drones = m_config["drones"].GetArray ();
-  const auto drone  = drones[i].GetObject ();
+  const auto drone = drones[i].GetObject ();
 
-  NS_ASSERT_MSG (drone.HasMember ("maxSpeed")
-                 && drone["maxSpeed"].IsDouble (),
+  NS_ASSERT_MSG (drone.HasMember ("maxSpeed") && drone["maxSpeed"].IsDouble (),
                  "Every done must have defined the parameter \"maxSpeed\".");
 
   return drone["maxSpeed"].GetDouble ();
@@ -546,17 +521,15 @@ ScenarioConfigurationHelper::GetDroneSpeedCoefficients (uint32_t i) const
   // checks for drones were already made in ::ConfGetNumDrones.
   // Let's skip them.
   const auto drones = m_config["drones"].GetArray ();
-  const auto drone  = drones[i].GetObject ();
+  const auto drone = drones[i].GetObject ();
 
   DoubleVector speedCoefficients;
 
-  NS_ASSERT (drone.HasMember ("speedCoefficients")
-             && drone["speedCoefficients"].IsArray ()
-             && drone["speedCoefficients"].Size () > 0);
+  NS_ASSERT (drone.HasMember ("speedCoefficients") && drone["speedCoefficients"].IsArray () &&
+             drone["speedCoefficients"].Size () > 0);
 
   for (auto coefficient = drone["speedCoefficients"].Begin ();
-       coefficient != drone["speedCoefficients"].End ();
-       coefficient++)
+       coefficient != drone["speedCoefficients"].End (); coefficient++)
     {
       NS_ASSERT ((*coefficient).IsDouble ());
       speedCoefficients.Add ((*coefficient).GetDouble ());
@@ -569,7 +542,7 @@ const double
 ScenarioConfigurationHelper::GetDroneApplicationStartTime (uint32_t i) const
 {
   const auto drones = m_config["drones"].GetArray ();
-  const auto drone  = drones[i].GetObject ();
+  const auto drone = drones[i].GetObject ();
 
   if (drone.HasMember ("applicationStartTime") && drone["applicationStartTime"].IsDouble ())
     return drone["applicationStartTime"].GetDouble ();
@@ -581,7 +554,7 @@ const double
 ScenarioConfigurationHelper::GetDroneApplicationStopTime (uint32_t i) const
 {
   const auto drones = m_config["drones"].GetArray ();
-  const auto drone  = drones[i].GetObject ();
+  const auto drone = drones[i].GetObject ();
 
   if (drone.HasMember ("applicationStopTime") && drone["applicationStopTime"].IsDouble ())
     return drone["applicationStopTime"].GetDouble ();
@@ -609,20 +582,15 @@ ScenarioConfigurationHelper::GetZspsPosition (Ptr<ListPositionAllocator> allocat
   // Let's skip them.
   for (auto i = m_config["ZSPs"].Begin (); i != m_config["ZSPs"].End (); i++)
     {
-      NS_ASSERT_MSG (i->IsObject (),
-                     "Each ZSP must be a JSON object.");
-      NS_ASSERT_MSG (i->HasMember ("position"),
-                     "One or more ZSPs do not have defined position.");
+      NS_ASSERT_MSG (i->IsObject (), "Each ZSP must be a JSON object.");
+      NS_ASSERT_MSG (i->HasMember ("position"), "One or more ZSPs do not have defined position.");
 
-      NS_ASSERT_MSG ((*i)["position"].IsArray ()
-                     && (*i)["position"].Size () == 3
-                     && (*i)["position"][0].IsDouble ()
-                     && (*i)["position"][1].IsDouble ()
-                     && (*i)["position"][2].IsDouble (),
+      NS_ASSERT_MSG ((*i)["position"].IsArray () && (*i)["position"].Size () == 3 &&
+                         (*i)["position"][0].IsDouble () && (*i)["position"][1].IsDouble () &&
+                         (*i)["position"][2].IsDouble (),
                      "Please check that each ZSP position is an array of 3 doubles.");
 
-      Vector v ((*i)["position"][0].GetDouble (),
-                (*i)["position"][1].GetDouble (),
+      Vector v ((*i)["position"][0].GetDouble (), (*i)["position"][1].GetDouble (),
                 (*i)["position"][2].GetDouble ());
 
       NS_LOG_LOGIC ("Allocating a ZSP in space at " << v);
@@ -636,7 +604,7 @@ ScenarioConfigurationHelper::GetZspApplicationStartTime (uint32_t i) const
   // checks for drones were already made in ::ConfGetNumDrones.
   // Let's skip them.
   const auto zsps = m_config["ZSPs"].GetArray ();
-  const auto zsp  = zsps[i].GetObject ();
+  const auto zsp = zsps[i].GetObject ();
 
   if (zsp.HasMember ("applicationStartTime") && zsp["applicationStartTime"].IsDouble ())
     return zsp["applicationStartTime"].GetDouble ();
@@ -650,7 +618,7 @@ ScenarioConfigurationHelper::GetZspApplicationStopTime (uint32_t i) const
   // checks for drones were already made in ::ConfGetNumDrones.
   // Let's skip them.
   const auto zsps = m_config["ZSPs"].GetArray ();
-  const auto zsp  = zsps[i].GetObject ();
+  const auto zsp = zsps[i].GetObject ();
 
   if (zsp.HasMember ("applicationStopTime") && zsp["applicationStopTime"].IsDouble ())
     return zsp["applicationStopTime"].GetDouble ();
@@ -676,20 +644,15 @@ ScenarioConfigurationHelper::GetEnbsPosition (Ptr<ListPositionAllocator> allocat
   // Let's skip them.
   for (auto i = m_config["ENBs"].Begin (); i != m_config["ENBs"].End (); i++)
     {
-      NS_ASSERT_MSG (i->IsObject (),
-                     "Each ENB must be a JSON object.");
-      NS_ASSERT_MSG (i->HasMember ("position"),
-                     "One or more ENBs do not have defined position.");
+      NS_ASSERT_MSG (i->IsObject (), "Each ENB must be a JSON object.");
+      NS_ASSERT_MSG (i->HasMember ("position"), "One or more ENBs do not have defined position.");
 
-      NS_ASSERT_MSG ((*i)["position"].IsArray ()
-                     && (*i)["position"].Size () == 3
-                     && (*i)["position"][0].IsDouble ()
-                     && (*i)["position"][1].IsDouble ()
-                     && (*i)["position"][2].IsDouble (),
+      NS_ASSERT_MSG ((*i)["position"].IsArray () && (*i)["position"].Size () == 3 &&
+                         (*i)["position"][0].IsDouble () && (*i)["position"][1].IsDouble () &&
+                         (*i)["position"][2].IsDouble (),
                      "Please check that each ENB position is an array of 3 doubles.");
 
-      Vector v ((*i)["position"][0].GetDouble (),
-                (*i)["position"][1].GetDouble (),
+      Vector v ((*i)["position"][0].GetDouble (), (*i)["position"][1].GetDouble (),
                 (*i)["position"][2].GetDouble ());
 
       NS_LOG_LOGIC ("Allocating a ENB in space at " << v);
@@ -713,40 +676,43 @@ ScenarioConfigurationHelper::IsDryRun () const
 }
 
 void
-ScenarioConfigurationHelper::InitializeConfiguration (int argc, char **argv)
+ScenarioConfigurationHelper::InitializeConfiguration (std::string req_body)
 {
-  std::string configFilePath = "";
-  constexpr const ssize_t configFileBufferSize = 64 * 1024;  // KiB
-  char configFileBuffer [configFileBufferSize];
+  // std::string configFilePath = "";
+  // constexpr const ssize_t configFileBufferSize = 64 * 1024; // KiB
+  // char configFileBuffer[configFileBufferSize];
 
-  CommandLine cmd;
-  cmd.AddValue ("name", "Name of the scenario", m_name);
-  cmd.AddValue ("config", "Configuration file path", configFilePath);
-  cmd.AddValue ("radioMap", "Enables the generation of the EnvironmentRadioMap", m_radioMap);
-  cmd.Parse (argc, argv);
+  // CommandLine cmd;
+  // cmd.AddValue ("name", "Name of the scenario", m_name);
+  // cmd.AddValue ("config", "Configuration file path", configFilePath);
+  // cmd.AddValue ("radioMap", "Enables the generation of the EnvironmentRadioMap", m_radioMap);
+  // cmd.Parse (argc, argv);
 
-  if (configFilePath.empty ())
-    {
-      NS_FATAL_ERROR ("Please specify a non-empty, JSON formatted configuration with --config!");
-    }
+  // if (configFilePath.empty ())
+  //   {
+  //     NS_FATAL_ERROR ("Please specify a non-empty, JSON formatted configuration with --config!");
+  //   }
 
   // open configuration file and decode JSON data
-  m_configFilePtr = fopen (configFilePath.c_str (), "rb");
-  if (m_configFilePtr == nullptr)
-    {
-      NS_FATAL_ERROR ("Cannot open " << configFilePath << ": " << std::strerror (errno));
-    }
+  // m_configFilePtr = fopen (configFilePath.c_str (), "rb");
+  // if (m_configFilePtr == nullptr)
+  //   {
+  //     NS_FATAL_ERROR ("Cannot open " << configFilePath << ": " << std::strerror (errno));
+  //   }
 
-  rapidjson::FileReadStream jsonFileStream (m_configFilePtr,
-                                            configFileBuffer,
-                                            configFileBufferSize);
-  m_config.ParseStream<rapidjson::kParseCommentsFlag> (jsonFileStream);
+  // rapidjson::FileReadStream jsonFileStream (m_configFilePtr,
+  //                                           configFileBuffer,
+  //                                           configFileBufferSize);
+  // m_config.ParseStream<rapidjson::kParseCommentsFlag> (jsonFileStream);
 
-  // close???
+  // TCC
+  // convert string to json document
+  rapidjson::StringStream data (req_body.c_str ());
+  m_config.ParseStream<rapidjson::kParseCommentsFlag> (data);
 
   NS_ABORT_MSG_IF (m_config.HasParseError (),
                    "The given configuration schema is not valid JSON: "
-                   << rapidjson::GetParseError_En(m_config.GetParseError ()));
+                       << rapidjson::GetParseError_En (m_config.GetParseError ()));
 }
 
 void
@@ -804,8 +770,7 @@ ScenarioConfigurationHelper::GetLogOnFile () const
   // this is an optional parameter. Default to false if not specified.
   if (m_config.HasMember ("logOnFile"))
     {
-      NS_ASSERT_MSG (m_config["logOnFile"].IsBool (),
-                     "'logOnFile' property must be boolean.");
+      NS_ASSERT_MSG (m_config["logOnFile"].IsBool (), "'logOnFile' property must be boolean.");
       return m_config["logOnFile"].GetBool ();
     }
   else
@@ -822,19 +787,15 @@ ScenarioConfigurationHelper::EnableLogComponents () const
       NS_ASSERT_MSG (m_config["logComponents"].IsArray (),
                      "'logComponents' property must be an array.");
 
-      for (auto i = m_config["logComponents"].Begin ();
-           i != m_config["logComponents"].End ();
-           i++)
+      for (auto i = m_config["logComponents"].Begin (); i != m_config["logComponents"].End (); i++)
         {
-          NS_ASSERT_MSG ((*i).IsString (),
-                         "'logComponents' elements must be strings.");
+          NS_ASSERT_MSG ((*i).IsString (), "'logComponents' elements must be strings.");
           LogComponentEnable ((*i).GetString (), LOG_ALL);
         }
     }
 
   LogComponentEnableAll (LOG_PREFIX_ALL);
 }
-
 
 const uint32_t
 ScenarioConfigurationHelper::GetAntennasN () const
@@ -852,20 +813,16 @@ ScenarioConfigurationHelper::GetAntennasPosition (Ptr<ListPositionAllocator> all
 {
   for (auto i = m_config["antennas"].Begin (); i != m_config["antennas"].End (); i++)
     {
-      NS_ASSERT_MSG (i->IsObject (),
-                     "Each antenna must be a JSON object.");
+      NS_ASSERT_MSG (i->IsObject (), "Each antenna must be a JSON object.");
       NS_ASSERT_MSG (i->HasMember ("position"),
                      "One or more antennas do not have defined position.");
 
-      NS_ASSERT_MSG ((*i)["position"].IsArray ()
-                     && (*i)["position"].Size () == 3
-                     && (*i)["position"][0].IsDouble ()
-                     && (*i)["position"][1].IsDouble ()
-                     && (*i)["position"][2].IsDouble (),
+      NS_ASSERT_MSG ((*i)["position"].IsArray () && (*i)["position"].Size () == 3 &&
+                         (*i)["position"][0].IsDouble () && (*i)["position"][1].IsDouble () &&
+                         (*i)["position"][2].IsDouble (),
                      "Please check that each antenna position is an array of 3 doubles.");
 
-      Vector v ((*i)["position"][0].GetDouble (),
-                (*i)["position"][1].GetDouble (),
+      Vector v ((*i)["position"][0].GetDouble (), (*i)["position"][1].GetDouble (),
                 (*i)["position"][2].GetDouble ());
 
       NS_LOG_LOGIC ("Allocating an antenna in space at " << v);
@@ -879,8 +836,7 @@ ScenarioConfigurationHelper::GetRemotesN () const
   if (!m_config.HasMember ("remotes"))
     return 0;
 
-  NS_ASSERT_MSG (m_config["remotes"].IsArray (),
-                 "JSON property 'remotes' must be an array.");
+  NS_ASSERT_MSG (m_config["remotes"].IsArray (), "JSON property 'remotes' must be an array.");
 
   return m_config["remotes"].Size ();
 }
@@ -889,7 +845,7 @@ const double
 ScenarioConfigurationHelper::GetRemoteApplicationStartTime (uint32_t i) const
 {
   const auto remotes = m_config["remotes"].GetArray ();
-  const auto remote  = remotes[i].GetObject ();
+  const auto remote = remotes[i].GetObject ();
 
   if (remote.HasMember ("applicationStartTime") && remote["applicationStartTime"].IsDouble ())
     {
@@ -905,7 +861,7 @@ const double
 ScenarioConfigurationHelper::GetRemoteApplicationStopTime (uint32_t i) const
 {
   const auto remotes = m_config["remotes"].GetArray ();
-  const auto remote  = remotes[i].GetObject ();
+  const auto remote = remotes[i].GetObject ();
 
   if (remote.HasMember ("applicationStopTime") && remote["applicationStopTime"].IsDouble ())
     {
@@ -917,19 +873,20 @@ ScenarioConfigurationHelper::GetRemoteApplicationStopTime (uint32_t i) const
     }
 }
 
-const std::vector<std::pair<std::string, std::string> >
+const std::vector<std::pair<std::string, std::string>>
 ScenarioConfigurationHelper::GetGlobalSettings () const
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  std::vector<std::pair<std::string, std::string> > settings;
+  std::vector<std::pair<std::string, std::string>> settings;
 
   if (m_config.HasMember ("settings"))
     {
       NS_ASSERT (m_config["settings"].IsArray ());
 
-      NS_ASSERT_MSG (m_config["settings"].Size () % 2 == 0,
-                     "Check \"settings\": elements in list are not an even number, something is missing.");
+      NS_ASSERT_MSG (
+          m_config["settings"].Size () % 2 == 0,
+          "Check \"settings\": elements in list are not an even number, something is missing.");
 
       for (auto i = m_config["settings"].Begin (); i != m_config["settings"].End (); i += 2)
         {
@@ -947,19 +904,20 @@ ScenarioConfigurationHelper::GetGlobalSettings () const
   return settings;
 }
 
-const std::vector<std::pair<std::string, std::string> >
+const std::vector<std::pair<std::string, std::string>>
 ScenarioConfigurationHelper::GetIndividualSettings () const
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  std::vector<std::pair<std::string, std::string> > settings;
+  std::vector<std::pair<std::string, std::string>> settings;
 
   if (m_config.HasMember ("settings"))
     {
       NS_ASSERT (m_config["settings"].IsArray ());
 
-      NS_ASSERT_MSG (m_config["settings"].Size () % 2 == 0,
-                     "Check \"settings\": elements in list are not an even number, something is missing.");
+      NS_ASSERT_MSG (
+          m_config["settings"].Size () % 2 == 0,
+          "Check \"settings\": elements in list are not an even number, something is missing.");
 
       for (auto i = m_config["settings"].Begin (); i != m_config["settings"].End (); i += 2)
         {
@@ -977,15 +935,14 @@ ScenarioConfigurationHelper::GetIndividualSettings () const
   return settings;
 }
 
-const std::vector<Ptr<Building> >
+const std::vector<Ptr<Building>>
 ScenarioConfigurationHelper::GetBuildings () const
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  std::vector<Ptr<Building> > buildings;
+  std::vector<Ptr<Building>> buildings;
 
-  NS_ASSERT_MSG (m_config.HasMember ("world"),
-                 "'world' definition is missing from the JSON file.");
+  NS_ASSERT_MSG (m_config.HasMember ("world"), "'world' definition is missing from the JSON file.");
   NS_ASSERT_MSG (m_config["world"].IsObject (),
                  "'world' defined in the JSON configuration must be an object.");
 
@@ -1003,7 +960,8 @@ ScenarioConfigurationHelper::GetBuildings () const
     {
       Ptr<Building> building = CreateObject<Building> ();
 
-      NS_ASSERT_MSG (b->HasMember ("boundaries") && (*b)["boundaries"].IsArray () && (*b)["boundaries"].Size () == 6,
+      NS_ASSERT_MSG (b->HasMember ("boundaries") && (*b)["boundaries"].IsArray () &&
+                         (*b)["boundaries"].Size () == 6,
                      "'boundaries' must be defined as an array of 6 doubles for each building.");
       auto bounds = (*b)["boundaries"].GetArray ();
       for (uint8_t i = 0; i < 6; ++i)
@@ -1036,7 +994,8 @@ ScenarioConfigurationHelper::GetBuildings () const
       if (b->HasMember ("walls"))
         {
           auto walls = std::string ((*b)["walls"].GetString ());
-          NS_ASSERT_MSG (walls == "wood" || walls == "concreteWithWindows" || walls == "concreteWithoutWindows" || walls == "stoneBlocks",
+          NS_ASSERT_MSG (walls == "wood" || walls == "concreteWithWindows" ||
+                             walls == "concreteWithoutWindows" || walls == "stoneBlocks",
                          "Unknown type of walls for a building: '" << walls << "'.");
           if (walls == "wood")
             {
@@ -1081,7 +1040,7 @@ const std::string
 ScenarioConfigurationHelper::GetDroneMobilityModel (uint32_t n) const
 {
   const auto drones = m_config["drones"].GetArray ();
-  const auto drone  = drones[n].GetObject ();
+  const auto drone = drones[n].GetObject ();
 
   if (drone.HasMember ("mobilityModel") && drone["mobilityModel"].IsString ())
     {
@@ -1096,36 +1055,34 @@ ScenarioConfigurationHelper::GetDronePosition (uint32_t n) const
   const auto drones = m_config["drones"].GetArray ();
   const auto drone = drones[n].GetObject ();
 
-  NS_ASSERT_MSG (GetDroneMobilityModel (n) == "ns3::ConstantPositionMobilityModel"
-                 || GetDronesMobilityModel () == "ns3::ConstantPositionMobilityModel",
-                 "Drone position parameter can be used only when the mobility model is ns3::ConstantPositionMobilityModel");
+  NS_ASSERT_MSG (GetDroneMobilityModel (n) == "ns3::ConstantPositionMobilityModel" ||
+                     GetDronesMobilityModel () == "ns3::ConstantPositionMobilityModel",
+                 "Drone position parameter can be used only when the mobility model is "
+                 "ns3::ConstantPositionMobilityModel");
 
   NS_ASSERT_MSG (drone.HasMember ("position"),
                  "Drone #" << n << " does not have a position defined.");
 
-  NS_ASSERT_MSG (drone["position"].IsArray ()
-                 && drone["position"].Size () == 3
-                 && drone["position"][0].IsDouble ()
-                 && drone["position"][1].IsDouble ()
-                 && drone["position"][2].IsDouble (),
+  NS_ASSERT_MSG (drone["position"].IsArray () && drone["position"].Size () == 3 &&
+                     drone["position"][0].IsDouble () && drone["position"][1].IsDouble () &&
+                     drone["position"][2].IsDouble (),
                  "Please check that drone #" << n << " position is an array of 3 doubles.");
 
-  Vector v (drone["position"][0].GetDouble (),
-            drone["position"][1].GetDouble (),
+  Vector v (drone["position"][0].GetDouble (), drone["position"][1].GetDouble (),
             drone["position"][2].GetDouble ());
 
   return v;
 }
 
 const std::string
-ScenarioConfigurationHelper::GetObjectName (const char* field, uint32_t index) const
+ScenarioConfigurationHelper::GetObjectName (const char *field, uint32_t index) const
 {
   NS_ASSERT (index < m_config[field].GetArray ().Size ());
   return m_config[field].GetArray ()[index].GetObject ()["name"].GetString ();
 }
 
 const uint32_t
-ScenarioConfigurationHelper::GetObjectIndex (const char* field, const std::string& name) const
+ScenarioConfigurationHelper::GetObjectIndex (const char *field, const std::string &name) const
 {
   auto array = m_config[field].GetArray ();
   for (uint32_t i = 0; i < array.Size (); i++)
@@ -1173,7 +1130,7 @@ ScenarioConfigurationHelper::GetDroneNetworks (uint32_t id) const
 }
 
 const std::vector<uint32_t>
-ScenarioConfigurationHelper::GetDroneNetworks (const std::string& name) const
+ScenarioConfigurationHelper::GetDroneNetworks (const std::string &name) const
 {
   return GetDroneNetworks (GetObjectIndex ("drones", name));
 }
@@ -1211,7 +1168,7 @@ ScenarioConfigurationHelper::GetAntennaNetworks (uint32_t id) const
 }
 
 const std::vector<uint32_t>
-ScenarioConfigurationHelper::GetAntennaNetworks (const std::string& name) const
+ScenarioConfigurationHelper::GetAntennaNetworks (const std::string &name) const
 {
   return GetAntennaNetworks (GetObjectIndex ("antennas", name));
 }
@@ -1226,8 +1183,8 @@ ScenarioConfigurationHelper::GetDronesInNetwork (uint32_t id) const
       auto nets = drones[i].GetObject ()["interfaces"].GetArray ();
       for (auto el = nets.Begin (); el != nets.End (); el++)
         {
-          if ( (el->IsInt () && el->GetUint () == id)
-               || (el->IsString () && GetObjectIndex ("networks", el->GetString ()) == id) )
+          if ((el->IsInt () && el->GetUint () == id) ||
+              (el->IsString () && GetObjectIndex ("networks", el->GetString ()) == id))
             {
               dronesInNet.push_back (i);
             }
@@ -1237,7 +1194,7 @@ ScenarioConfigurationHelper::GetDronesInNetwork (uint32_t id) const
 }
 
 const std::vector<uint32_t>
-ScenarioConfigurationHelper::GetDronesInNetwork (const std::string& net_name) const
+ScenarioConfigurationHelper::GetDronesInNetwork (const std::string &net_name) const
 {
   return GetDronesInNetwork (GetObjectIndex ("networks", net_name));
 }
@@ -1252,8 +1209,8 @@ ScenarioConfigurationHelper::GetAntennasInNetwork (uint32_t id) const
       auto nets = antennas[i].GetObject ()["interfaces"].GetArray ();
       for (auto el = nets.Begin (); el != nets.End (); el++)
         {
-          if ( (el->IsInt () && el->GetUint () == id)
-               || (el->IsString () && GetObjectIndex ("networks", el->GetString ()) == id) )
+          if ((el->IsInt () && el->GetUint () == id) ||
+              (el->IsString () && GetObjectIndex ("networks", el->GetString ()) == id))
             {
               antennasInNet.push_back (i);
             }
@@ -1263,11 +1220,10 @@ ScenarioConfigurationHelper::GetAntennasInNetwork (uint32_t id) const
 }
 
 const std::vector<uint32_t>
-ScenarioConfigurationHelper::GetAntennasInNetwork (const std::string& net_name) const
+ScenarioConfigurationHelper::GetAntennasInNetwork (const std::string &net_name) const
 {
   return GetAntennasInNetwork (GetObjectIndex ("networks", net_name));
 }
-
 
 const bool
 ScenarioConfigurationHelper::RadioMap () const
@@ -1275,17 +1231,19 @@ ScenarioConfigurationHelper::RadioMap () const
   return m_radioMap;
 }
 
-const std::vector<std::pair<std::string, std::string> >
+const std::vector<std::pair<std::string, std::string>>
 ScenarioConfigurationHelper::GetRadioMapParameters () const
 {
-  std::vector<std::pair<std::string, std::string> > parameters;
+  std::vector<std::pair<std::string, std::string>> parameters;
   NS_ASSERT_MSG (m_config.HasMember ("radioMapParameters"),
                  "'radioMapParameters' key is not present in the configuration file.");
 
-  NS_ASSERT_MSG (m_config["radioMapParameters"].IsArray () && m_config["radioMapParameters"].Size () % 2 == 0,
+  NS_ASSERT_MSG (m_config["radioMapParameters"].IsArray () &&
+                     m_config["radioMapParameters"].Size () % 2 == 0,
                  "Check 'radioMapParameters': should be an array of even number elements.");
 
-  for (auto i = m_config["radioMapParameters"].Begin (); i != m_config["radioMapParameters"].End (); i += 2)
+  for (auto i = m_config["radioMapParameters"].Begin (); i != m_config["radioMapParameters"].End ();
+       i += 2)
     {
       NS_ASSERT ((*i).IsString ());
       NS_ASSERT ((*(i + 1)).IsString ());
@@ -1297,7 +1255,8 @@ ScenarioConfigurationHelper::GetRadioMapParameters () const
 }
 
 const std::string
-ScenarioConfigurationHelper::MakePath (const std::string& path1, const std::string& path2 /* ="" */) const
+ScenarioConfigurationHelper::MakePath (const std::string &path1,
+                                       const std::string &path2 /* ="" */) const
 {
   std::string npath (path1);
   if (npath.at (0) != '/')
@@ -1320,21 +1279,21 @@ ScenarioConfigurationHelper::MakePath (const std::string& path1, const std::stri
 }
 
 const std::string
-ScenarioConfigurationHelper::MakePath (const std::string& path, uint32_t index) const
+ScenarioConfigurationHelper::MakePath (const std::string &path, uint32_t index) const
 {
   return MakePath (path, std::to_string (index));
 }
 
 bool
-ScenarioConfigurationHelper::CheckPath (const std::string& path) const
+ScenarioConfigurationHelper::CheckPath (const std::string &path) const
 {
   return rapidjson::Pointer (MakePath (path).c_str ()).Get (m_config) != nullptr;
 }
 
 const std::pair<bool, int32_t>
-ScenarioConfigurationHelper::GetInt (const std::string& path) const
+ScenarioConfigurationHelper::GetInt (const std::string &path) const
 {
-  const rapidjson::Value* value = rapidjson::Pointer (MakePath (path).c_str ()).Get (m_config);
+  const rapidjson::Value *value = rapidjson::Pointer (MakePath (path).c_str ()).Get (m_config);
   if (value == nullptr)
     {
       return std::make_pair<bool, int32_t> (false, 0);
@@ -1346,9 +1305,9 @@ ScenarioConfigurationHelper::GetInt (const std::string& path) const
 }
 
 const std::pair<bool, uint32_t>
-ScenarioConfigurationHelper::GetUint (const std::string& path) const
+ScenarioConfigurationHelper::GetUint (const std::string &path) const
 {
-  const rapidjson::Value* value = rapidjson::Pointer (MakePath (path).c_str ()).Get (m_config);
+  const rapidjson::Value *value = rapidjson::Pointer (MakePath (path).c_str ()).Get (m_config);
   if (value == nullptr)
     {
       return std::make_pair<bool, uint32_t> (false, 0);
@@ -1360,9 +1319,9 @@ ScenarioConfigurationHelper::GetUint (const std::string& path) const
 }
 
 const std::pair<bool, double>
-ScenarioConfigurationHelper::GetDouble (const std::string& path) const
+ScenarioConfigurationHelper::GetDouble (const std::string &path) const
 {
-  const rapidjson::Value* value = rapidjson::Pointer (MakePath (path).c_str ()).Get (m_config);
+  const rapidjson::Value *value = rapidjson::Pointer (MakePath (path).c_str ()).Get (m_config);
   if (value == nullptr)
     {
       return std::make_pair<bool, double> (false, 0.0);
@@ -1374,9 +1333,9 @@ ScenarioConfigurationHelper::GetDouble (const std::string& path) const
 }
 
 const std::pair<bool, bool>
-ScenarioConfigurationHelper::GetBool (const std::string& path) const
+ScenarioConfigurationHelper::GetBool (const std::string &path) const
 {
-  const rapidjson::Value* value = rapidjson::Pointer (MakePath (path).c_str ()).Get (m_config);
+  const rapidjson::Value *value = rapidjson::Pointer (MakePath (path).c_str ()).Get (m_config);
   if (value == nullptr)
     {
       return std::make_pair<bool, bool> (false, false);
@@ -1388,9 +1347,9 @@ ScenarioConfigurationHelper::GetBool (const std::string& path) const
 }
 
 const std::pair<bool, std::string>
-ScenarioConfigurationHelper::GetString (const std::string& path) const
+ScenarioConfigurationHelper::GetString (const std::string &path) const
 {
-  const rapidjson::Value* value = rapidjson::Pointer (MakePath (path).c_str ()).Get (m_config);
+  const rapidjson::Value *value = rapidjson::Pointer (MakePath (path).c_str ()).Get (m_config);
   if (value == nullptr)
     {
       return std::make_pair<bool, std::string> (false, "");
@@ -1402,7 +1361,7 @@ ScenarioConfigurationHelper::GetString (const std::string& path) const
 }
 
 const std::vector<DoubleVector>
-ScenarioConfigurationHelper::GetRegionsOfInterest() const
+ScenarioConfigurationHelper::GetRegionsOfInterest () const
 {
   std::vector<DoubleVector> final_regions;
 
@@ -1411,21 +1370,19 @@ ScenarioConfigurationHelper::GetRegionsOfInterest() const
 
   const auto world = m_config["world"].GetObject ();
   if (world.HasMember ("regionsOfInterest"))
-  {
-    const auto regions = world["regionsOfInterest"].GetArray();
-    for (auto region = regions.Begin (); region != regions.End (); region++)
     {
-      const auto xMin = (*region)[0].GetDouble();
-      const auto xMax = (*region)[1].GetDouble();
-      const auto yMin = (*region)[2].GetDouble();
-      const auto yMax = (*region)[3].GetDouble();
-      const auto zMin = (*region)[4].GetDouble();
-      const auto zMax = (*region)[5].GetDouble();
-      final_regions.push_back(DoubleVector({
-        xMin,xMax,yMin,yMax,zMin,zMax
-      }));
+      const auto regions = world["regionsOfInterest"].GetArray ();
+      for (auto region = regions.Begin (); region != regions.End (); region++)
+        {
+          const auto xMin = (*region)[0].GetDouble ();
+          const auto xMax = (*region)[1].GetDouble ();
+          const auto yMin = (*region)[2].GetDouble ();
+          const auto yMax = (*region)[3].GetDouble ();
+          const auto zMin = (*region)[4].GetDouble ();
+          const auto zMax = (*region)[5].GetDouble ();
+          final_regions.push_back (DoubleVector ({xMin, xMax, yMin, yMax, zMin, zMax}));
+        }
     }
-  }
   return final_regions;
 }
 
