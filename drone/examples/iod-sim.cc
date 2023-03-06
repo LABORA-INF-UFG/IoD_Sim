@@ -207,6 +207,7 @@ Scenario::MetricsHandler (nlohmann::json *jout, nlohmann::json *nodes_ip,
                           ns3::FlowMonitorHelper *flowmon, Ptr<ns3::FlowMonitor> *monitor,
                           double time)
 {
+  // TODO: refatorar
   // std::uint32_t SentPackets = 0;
   // std::uint32_t ReceivedPackets = 0;
   // std::uint32_t LostPackets = 0;
@@ -250,6 +251,7 @@ Scenario::MetricsHandler (nlohmann::json *jout, nlohmann::json *nodes_ip,
       // add to json
       std::stringstream srcAddr, dstAddr, sentPck, recvPck, lostPck, pckDelRatio, delay, jitter,
           thrgKbps, communication;
+      std::string commStr;
       srcAddr << t.sourceAddress;
       dstAddr << t.destinationAddress;
       sentPck << iter->second.txPackets;
@@ -263,16 +265,99 @@ Scenario::MetricsHandler (nlohmann::json *jout, nlohmann::json *nodes_ip,
                       (iter->second.timeLastRxPacket.GetSeconds () -
                        iter->second.timeFirstTxPacket.GetSeconds ()) /
                       1024;
-      communication << (*nodes_ip)[srcAddr.str ()] << "->" << (*nodes_ip)[dstAddr.str ()];
-      std::string str;
-      str = communication.str ();
-      str.erase (std::remove (str.begin (), str.end (), '\"'), str.end ());
+      // check if exists
+      if ((*nodes_ip).count (srcAddr.str ()) == 0)
+        {
+          commStr = "null";
+        }
+      else
+        {
+          communication << (*nodes_ip)[srcAddr.str ()]["label"] << "->"
+                        << (*nodes_ip)[dstAddr.str ()]["label"];
+          commStr = communication.str ();
+          commStr.erase (std::remove (commStr.begin (), commStr.end (), '\"'), commStr.end ());
+          // check type
+          if ((*nodes_ip)[srcAddr.str ()]["type"] == "drone") // drone
+            {
+              auto drone = m_drones.Get ((*nodes_ip)[srcAddr.str ()]["cIndex"]);
+              auto dronePosition = drone->GetObject<MobilityModel> ()->GetPosition ();
+              (*jout)["drones-metrics"].push_back (nlohmann::json::object (
+                  {{"time", time},
+                   {"node-id", drone->GetId ()},
+                   {"battery", drone->GetObject<EnergySource> ()->GetRemainingEnergy ()},
+                   {"location",
+                    {{"x", dronePosition.x}, {"y", dronePosition.y}, {"z", dronePosition.z}}},
+                   {"network",
+                    {{"flow-monitor-id", iter->first},
+                     {"iface", (*nodes_ip)[srcAddr.str ()]["iface"]},
+                     {"communication", commStr},
+                     {"src-addr", srcAddr.str ()},
+                     {"dst-addr", dstAddr.str ()},
+                     {"sent-pck", sentPck.str ()},
+                     {"received-pck", recvPck.str ()},
+                     {"lost-pck", lostPck.str ()},
+                     {"pck-delivery-ratio", pckDelRatio.str ()},
+                     {"delay", delay.str ()},
+                     {"jitter", jitter.str ()},
+                     {"throughput-kbps", thrgKbps.str ()},
+                     {"rsrp", "TODO"},
+                     {"rsrq", "TODO"},
+                     {"sinr", "TODO"},
+                     {"cqi", "TODO"},
+                     {"txPower", "TODO"}}}}));
+            }
+          else if ((*nodes_ip)[srcAddr.str ()]["type"] == "zsp") // zsp
+            {
+              auto zsp = m_zsps.Get ((*nodes_ip)[srcAddr.str ()]["cIndex"]);
+              (*jout)["zsps-metrics"].push_back (
+                  nlohmann::json::object ({{"time", time},
+                                           {"id", zsp->GetId ()},
+                                           {"network",
+                                            {{"flow-monitor-id", iter->first},
+                                             {"iface", (*nodes_ip)[srcAddr.str ()]["iface"]},
+                                             {"communication", commStr},
+                                             {"src-addr", srcAddr.str ()},
+                                             {"dst-addr", dstAddr.str ()},
+                                             {"sent-pck", sentPck.str ()},
+                                             {"received-pck", recvPck.str ()},
+                                             {"lost-pck", lostPck.str ()},
+                                             {"pck-delivery-ratio", pckDelRatio.str ()},
+                                             {"delay", delay.str ()},
+                                             {"jitter", jitter.str ()},
+                                             {"throughput-kbps", thrgKbps.str ()},
+                                             {"txPower", "TODO"}}}}));
+            }
+          else
+            {
+              std::stringstream jlabel;
+              std::string jlabelStr;
+              jlabel << (*nodes_ip)[srcAddr.str ()]["type"] << "s-metrics";
+              jlabelStr = jlabel.str();
+              jlabelStr.erase (std::remove (jlabelStr.begin (), jlabelStr.end (), '\"'), jlabelStr.end ());
+              (*jout)[jlabelStr].push_back (
+                  nlohmann::json::object ({{"time", time},
+                                           {"node-id", (*nodes_ip)[srcAddr.str ()]["id"]},
+                                           {"network",
+                                            {{"flow-monitor-id", iter->first},
+                                             {"iface", (*nodes_ip)[srcAddr.str ()]["iface"]},
+                                             {"communication", commStr},
+                                             {"src-addr", srcAddr.str ()},
+                                             {"dst-addr", dstAddr.str ()},
+                                             {"sent-pck", sentPck.str ()},
+                                             {"received-pck", recvPck.str ()},
+                                             {"lost-pck", lostPck.str ()},
+                                             {"pck-delivery-ratio", pckDelRatio.str ()},
+                                             {"delay", delay.str ()},
+                                             {"jitter", jitter.str ()},
+                                             {"throughput-kbps", thrgKbps.str ()}}}}));
+            }
+        }
 
       (*jout)["flow-metrics"].push_back (
           nlohmann::json::object ({{"time", time},
                                    // {"flow-metrics",
                                    {"id", iter->first},
-                                   {"communication", str},
+                                   {"communication", commStr},
                                    {"src-addr", srcAddr.str ()},
                                    {"dst-addr", dstAddr.str ()},
                                    {"sent-pck", sentPck.str ()},
@@ -282,8 +367,6 @@ Scenario::MetricsHandler (nlohmann::json *jout, nlohmann::json *nodes_ip,
                                    {"delay", delay.str ()},
                                    {"jitter", jitter.str ()},
                                    {"throughput-kbps", thrgKbps.str ()}}));
-      // {"location", "TODO"},
-      // {"battery", "TODO"}
 
       // sum to total
       // SentPackets = SentPackets + (iter->second.txPackets);
@@ -315,52 +398,6 @@ Scenario::MetricsHandler (nlohmann::json *jout, nlohmann::json *nodes_ip,
   // std::cout << jout.dump (4) << std::endl;
   // --
 
-  // test drone energy source
-  // for (auto drone = m_drones.Begin (); drone != m_drones.End (); drone++)
-  //   drone->getEnergySource();
-
-  for (uint32_t i = 0; i < m_drones.GetN (); i++)
-    {
-      auto drone = m_drones.Get (i);
-      auto dronePosition = drone->GetObject<MobilityModel> ()->GetPosition ();
-      (*jout)["drone-metrics"].push_back (nlohmann::json::object (
-          {{"time", time},
-           //  {"drone-metrics",
-           {"id", drone->GetId ()},
-           //  {"battery", (m_drones.Get (i))->getEnergySource ()->GetRemainingEnergy ()}, // remover getEnergySource
-           {"battery", drone->GetObject<EnergySource> ()->GetRemainingEnergy ()},
-           {"location", {{"x", dronePosition.x}, {"y", dronePosition.y}, {"z", dronePosition.z}}},
-           {"network", "TODO"}}));
-    }
-
-  for (uint32_t i = 0; i < m_zsps.GetN (); i++)
-    {
-      auto zsp = m_zsps.Get (i);
-      // auto zspPosition = zsp->GetObject<MobilityModel> ()->GetPosition ();
-      (*jout)["zsp-metrics"].push_back (nlohmann::json::object (
-          {{"time", time},
-           //  {"drone-metrics",
-           {"id", zsp->GetId ()},
-           //  {"battery", (m_drones.Get (i))->getEnergySource ()->GetRemainingEnergy ()}, // remover getEnergySource
-           //  {"battery", drone->GetObject<EnergySource> ()->GetRemainingEnergy ()},
-           //  {"location", {{"x", zspPosition.x}, {"y", zspPosition.y}, {"z", zspPosition.z}}},
-           {"network", "TODO"}}));
-    }
-
-  for (uint32_t i = 0; i < m_remoteNodes.GetN (); i++)
-    {
-      auto remoteDrone = m_remoteNodes.Get (i);
-      // auto remoteDronePosition = remoteDrone->GetObject<MobilityModel> ()->GetPosition ();
-      (*jout)["remote-drones-metrics"].push_back (nlohmann::json::object (
-          {{"time", time},
-           //  {"drone-metrics",
-           {"id", remoteDrone->GetId ()},
-           //  {"battery", (m_drones.Get (i))->getEnergySource ()->GetRemainingEnergy ()}, // remover getEnergySource
-           //  {"battery", drone->GetObject<EnergySource> ()->GetRemainingEnergy ()},
-           //  {"location", {{"x", remoteDronePosition.x}, {"y", remoteDronePosition.y}, {"z", remoteDronePosition.z}}},
-           {"network", "TODO"}}));
-    }
-
   Simulator::Schedule (Seconds (1.0), &Scenario::MetricsHandler, this, jout, nodes_ip, flowmon,
                        monitor, Simulator::Now ().GetSeconds ());
 }
@@ -383,6 +420,7 @@ Scenario::operator() ()
 
   nlohmann::json nodes_ip;
 
+  // TODO: refatorar
   // m_drones
   for (uint32_t i = 0; i < m_drones.GetN (); i++)
     {
@@ -392,8 +430,13 @@ Scenario::operator() ()
         {
           std::stringstream ip_address;
           ip_address << ipv4->GetAddress (j, 0).GetAddress ();
-          nodes_ip[ip_address.str ()] =
-              "drone" + std::to_string (drone->GetId ()) + "_if" + std::to_string (j);
+          // nodes_ip[ip_address.str ()] = "drone" + std::to_string (drone->GetId ()) + "_if" + std::to_string (j);
+          nodes_ip[ip_address.str ()] = nlohmann::json::object (
+              {{"type", "drone"},
+               {"id", drone->GetId ()},
+               {"iface", "if" + std::to_string (j)},
+               {"label", "drone" + std::to_string (drone->GetId ()) + "_if" + std::to_string (j)},
+               {"cIndex", i}});
         }
     }
   // m_zsps;
@@ -405,8 +448,13 @@ Scenario::operator() ()
         {
           std::stringstream ip_address;
           ip_address << ipv4->GetAddress (j, 0).GetAddress ();
-          nodes_ip[ip_address.str ()] =
-              "zsp" + std::to_string (zsp->GetId ()) + "_if" + std::to_string (j);
+          // nodes_ip[ip_address.str ()] = "zsp" + std::to_string (zsp->GetId ()) + "_if" + std::to_string (j);
+          nodes_ip[ip_address.str ()] = nlohmann::json::object (
+              {{"type", "zsp"},
+               {"id", zsp->GetId ()},
+               {"iface", "if" + std::to_string (j)},
+               {"label", "zsp" + std::to_string (zsp->GetId ()) + "_if" + std::to_string (j)},
+               {"cIndex", i}});
         }
     }
   // m_remoteNodes;
@@ -418,8 +466,14 @@ Scenario::operator() ()
         {
           std::stringstream ip_address;
           ip_address << ipv4->GetAddress (j, 0).GetAddress ();
-          nodes_ip[ip_address.str ()] =
-              "remoteNode" + std::to_string (remoteNode->GetId ()) + "_if" + std::to_string (j);
+          // nodes_ip[ip_address.str ()] = "remoteNode" + std::to_string (remoteNode->GetId ()) + "_if" + std::to_string (j);
+          nodes_ip[ip_address.str ()] = nlohmann::json::object (
+              {{"type", "remoteNode"},
+               {"id", remoteNode->GetId ()},
+               {"iface", "if" + std::to_string (j)},
+               {"label",
+                "remoteNode" + std::to_string (remoteNode->GetId ()) + "_if" + std::to_string (j)},
+               {"cIndex", i}});
         }
     }
   // m_backbone;
@@ -431,8 +485,14 @@ Scenario::operator() ()
         {
           std::stringstream ip_address;
           ip_address << ipv4->GetAddress (j, 0).GetAddress ();
+          // nodes_ip[ip_address.str ()] = "backbone" + std::to_string (backbone->GetId ()) + "_if" + std::to_string (j);
           nodes_ip[ip_address.str ()] =
-              "backbone" + std::to_string (backbone->GetId ()) + "_if" + std::to_string (j);
+              nlohmann::json::object ({{"type", "backbone"},
+                                       {"id", backbone->GetId ()},
+                                       {"iface", "if" + std::to_string (j)},
+                                       {"label", "backbone" + std::to_string (backbone->GetId ()) +
+                                                     "_if" + std::to_string (j)},
+                                       {"cIndex", i}});
         }
     }
 
@@ -448,8 +508,13 @@ Scenario::operator() ()
               std::stringstream ip_address;
               ip_address << ipv4->GetAddress (j, 0).GetAddress ();
               if (nodes_ip.count (ip_address.str ()) == 0)
+                // nodes_ip[ip_address.str ()] = "node" + std::to_string (node->GetId ()) + "_if" + std::to_string (j);
                 nodes_ip[ip_address.str ()] =
-                    "node" + std::to_string (node->GetId ()) + "_if" + std::to_string (j);
+                    nlohmann::json::object ({{"type", "node"},
+                                             {"id", node->GetId ()},
+                                             {"iface", "if" + std::to_string (j)},
+                                             {"label", "node" + std::to_string (node->GetId ()) +
+                                                           "_if" + std::to_string (j)}});
             }
         }
     }
@@ -463,9 +528,10 @@ Scenario::operator() ()
   // schedule metricshandler
   nlohmann::json jout;
   jout["flow-metrics"] = nlohmann::json::array ();
-  jout["drone-metrics"] = nlohmann::json::array ();
-  jout["zsp-metrics"] = nlohmann::json::array ();
-  jout["remote-drones-metrics"] = nlohmann::json::array ();
+  jout["drones-metrics"] = nlohmann::json::array ();
+  jout["zsps-metrics"] = nlohmann::json::array ();
+  jout["nodes-metrics"] = nlohmann::json::array ();
+  jout["remoteNodes-metrics"] = nlohmann::json::array ();
 
   Simulator::Schedule (Seconds (1.0), &Scenario::MetricsHandler, this, &jout, &nodes_ip, &flowmon,
                        &monitor, Simulator::Now ().GetSeconds ());
@@ -476,8 +542,8 @@ Scenario::operator() ()
   // save json time series metrics to file
   std::stringstream timeSeries;
   timeSeries << CONFIGURATOR->GetResultsPath () << "time-series-metrics.json";
-  std::ofstream o(timeSeries.str());
-  o << std::setw(4) << jout << std::endl;
+  std::ofstream o (timeSeries.str ());
+  o << std::setw (4) << jout << std::endl;
 
   Report::Get ()->Save ();
   Simulator::Destroy ();
