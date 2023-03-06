@@ -208,16 +208,6 @@ Scenario::MetricsHandler (nlohmann::json *jout, nlohmann::json *nodes_ip,
                           double time)
 {
   // TODO: refatorar
-  // std::uint32_t SentPackets = 0;
-  // std::uint32_t ReceivedPackets = 0;
-  // std::uint32_t LostPackets = 0;
-  // int j = 0;
-  // float AvgThroughput = 0;
-  // Time Jitter;
-  // Time Delay;
-
-  // std::cout << "=========== TIME: " << time << " ===========" << std::endl;
-
   Ptr<Ipv4FlowClassifier> classifier =
       DynamicCast<Ipv4FlowClassifier> ((*flowmon).GetClassifier ());
   std::map<FlowId, FlowMonitor::FlowStats> stats = (*monitor)->GetFlowStats ();
@@ -226,27 +216,6 @@ Scenario::MetricsHandler (nlohmann::json *jout, nlohmann::json *nodes_ip,
        iter != stats.end (); ++iter)
     {
       Ipv4FlowClassifier::FiveTuple t = classifier->FindFlow (iter->first);
-      // auto droneId = iter->first->GetObject<Drone> ()->GetId ();
-      // std::cout << "----Flow ID: " << iter->first << std::endl;
-      // std::cout << "Src Addr " << t.sourceAddress << " Dst Addr " << t.destinationAddress
-      //           << std::endl;
-      // std::cout << "Sent Packets = " << iter->second.txPackets << std::endl;
-      // std::cout << "Received Packets = " << iter->second.rxPackets << std::endl;
-      // std::cout << "Lost Packets = " << iter->second.txPackets - iter->second.rxPackets
-      //           << std::endl;
-      // std::cout << "Packet delivery ratio = "
-      //           << iter->second.rxPackets * 100 / iter->second.txPackets << "%" << std::endl;
-      // std::cout << "Packet loss ratio = "
-      //           << (iter->second.txPackets - iter->second.rxPackets) * 100 / iter->second.txPackets
-      //           << "%" << std::endl;
-      // std::cout << "Delay = " << iter->second.delaySum << std::endl;
-      // std::cout << "Jitter = " << iter->second.jitterSum << std::endl;
-      // std::cout << "Throughput = "
-      //           << iter->second.rxBytes * 8.0 /
-      //                  (iter->second.timeLastRxPacket.GetSeconds () -
-      //                   iter->second.timeFirstTxPacket.GetSeconds ()) /
-      //                  1024
-      //           << "Kbps" << std::endl;
 
       // add to json
       std::stringstream srcAddr, dstAddr, sentPck, recvPck, lostPck, pckDelRatio, delay, jitter,
@@ -367,36 +336,7 @@ Scenario::MetricsHandler (nlohmann::json *jout, nlohmann::json *nodes_ip,
                                    {"delay", delay.str ()},
                                    {"jitter", jitter.str ()},
                                    {"throughput-kbps", thrgKbps.str ()}}));
-
-      // sum to total
-      // SentPackets = SentPackets + (iter->second.txPackets);
-      // ReceivedPackets = ReceivedPackets + (iter->second.rxPackets);
-      // LostPackets = LostPackets + (iter->second.txPackets - iter->second.rxPackets);
-      // AvgThroughput = AvgThroughput + (iter->second.rxBytes * 8.0 /
-      //                                  (iter->second.timeLastRxPacket.GetSeconds () -
-      //                                   iter->second.timeFirstTxPacket.GetSeconds ()) /
-      //                                  1024);
-      // Delay = Delay + (iter->second.delaySum);
-      // Jitter = Jitter + (iter->second.jitterSum);
-
-      // j = j + 1;
     }
-
-  // AvgThroughput = AvgThroughput / j;
-  // std::cout << "--------Total Results of the simulation----------" << std::endl;
-  // std::cout << "Total sent packets  = " << SentPackets << std::endl;
-  // std::cout << "Total Received Packets = " << ReceivedPackets << std::endl;
-  // std::cout << "Total Lost Packets = " << LostPackets << std::endl;
-  // std::cout << "Packet Loss ratio = " << ((LostPackets * 100) / SentPackets) << "%" << std::endl;
-  // std::cout << "Packet delivery ratio = " << ((ReceivedPackets * 100) / SentPackets) << "%"
-  //           << std::endl;
-  // std::cout << "Average Throughput = " << AvgThroughput << " Kbps" << std::endl;
-  // std::cout << "End to End Delay = " << Delay << std::endl;
-  // std::cout << "End to End Jitter delay = " << Jitter << std::endl;
-  // std::cout << "Total Flod id " << j << std::endl;
-  // (*monitor)->SerializeToXmlFile ("/home/elton/manet-routing_flow-monitor.xml", true, true);
-  // std::cout << jout.dump (4) << std::endl;
-  // --
 
   Simulator::Schedule (Seconds (1.0), &Scenario::MetricsHandler, this, jout, nodes_ip, flowmon,
                        monitor, Simulator::Now ().GetSeconds ());
