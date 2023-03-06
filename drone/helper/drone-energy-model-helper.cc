@@ -39,7 +39,6 @@ DroneEnergyModelHelper::Install (Ptr<Drone> drone, Ptr<EnergySource> source)
   model->SetEnergySource (source);
   source->AppendDeviceEnergyModel (model);
   source->SetNode (drone);
-  drone->setEnergySource(source); // my edit
   return model;
 }
 

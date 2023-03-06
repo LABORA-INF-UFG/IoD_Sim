@@ -87,18 +87,6 @@ Drone::getPeripherals ()
   return m_peripheralContainer;
 }
 
-Ptr<EnergySource>
-Drone::getEnergySource ()
-{
-  return m_energySource;
-}
-
-void
-Drone::setEnergySource (Ptr<EnergySource> energySource)
-{
-  m_energySource = energySource;
-}
-
 void
 Drone::setMass (double mass)
 {
