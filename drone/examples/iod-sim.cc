@@ -346,21 +346,6 @@ Scenario::MetricsHandler (nlohmann::json *jout, ns3::FlowMonitorHelper *flowmon,
                                    {"throughput-kbps", thrgKbps.str ()}}));
     }
 
-  // for (uint32_t i = 0; i < m_zsps.GetN (); i++)
-  //   {
-  //     auto zsp = m_zsps.Get (i);
-  //     if (zsp->GetDevice (0))
-  //       {
-  //         auto dev = StaticCast<LteEnbNetDevice, NetDevice> (zsp->GetDevice (0));
-  //         std::cout << "-id: " << zsp->GetId () << " | TxPower: " << dev->GetPhy ()->GetTxPower ()
-  //                   << " | DlSpectrum" << dev->GetPhy ()->GetDlSpectrumPhy () << std::endl;
-  //       }
-  //     else
-  //       {
-  //         std::cout << "-id: " << zsp->GetId () << " LteUeNetDevice not found." << std::endl;
-  //       }
-  //   }
-
   Simulator::Schedule (Seconds (CONFIGURATOR->GetTimeSeriesInterval ()), &Scenario::MetricsHandler,
                        this, jout, flowmon, monitor, Simulator::Now ().GetSeconds ());
 }
@@ -434,7 +419,6 @@ Scenario::operator() ()
     {
       auto drone = m_drones.Get (i);
       auto ipv4 = drone->GetObject<Ipv4> ();
-      // auto dronePosition = drone->GetObject<MobilityModel> ()->GetPosition ();
       auto dev = StaticCast<LteUeNetDevice, NetDevice> (drone->GetDevice (0));
       auto ifaces = nlohmann::json::array ();
       for (uint32_t j = 1; j < ipv4->GetNInterfaces (); j++)
@@ -442,7 +426,6 @@ Scenario::operator() ()
           std::stringstream ip_address, netmask;
           ip_address << ipv4->GetAddress (j, 0).GetAddress ();
           netmask << ipv4->GetAddress (j, 0).GetMask ();
-          // m_nodesIp[ip_address.str ()] = "drone" + std::to_string (drone->GetId ()) + "_if" + std::to_string (j);
           m_nodesIp[ip_address.str ()] = nlohmann::json::object (
               {{"type", "drone"},
                {"id", drone->GetId ()},
@@ -459,7 +442,6 @@ Scenario::operator() ()
           {{"time", 0},
            {"id", drone->GetId ()},
            {"label", "drone" + std::to_string (drone->GetId ())},
-           //  {"location", {{"x", dronePosition.x}, {"y", dronePosition.y}, {"z", dronePosition.z}}},
            {"txPower", dev->GetPhy ()->GetTxPower ()},
            {"noise", dev->GetPhy ()->GetNoiseFigure ()},
            {"ifaces", ifaces}}));
@@ -505,8 +487,6 @@ Scenario::operator() ()
     {
       auto remoteNode = m_remoteNodes.Get (i);
       auto ipv4 = remoteNode->GetObject<Ipv4> ();
-      // auto position = remoteNode->GetObject<MobilityModel> ()->GetPosition ();
-      // auto dev = StaticCast<LteUeNetDevice, NetDevice> (remoteNode->GetDevice (0));
       auto ifaces = nlohmann::json::array ();
       for (uint32_t j = 1; j < ipv4->GetNInterfaces (); j++)
         {
@@ -530,9 +510,6 @@ Scenario::operator() ()
           {{"time", 0},
            {"id", remoteNode->GetId ()},
            {"label", "remoteNode" + std::to_string (remoteNode->GetId ())},
-           //  {"location", {{"x", position.x}, {"y", position.y}, {"z", position.z}}},
-           //  {"txPower", dev->GetPhy ()->GetTxPower ()},
-           //  {"noise", dev->GetPhy ()->GetNoiseFigure ()},
            {"ifaces", ifaces}}));
     }
   // m_backbone;
@@ -541,8 +518,6 @@ Scenario::operator() ()
 
       auto backbone = m_backbone.Get (i);
       auto ipv4 = backbone->GetObject<Ipv4> ();
-      // auto position = backbone->GetObject<MobilityModel> ()->GetPosition ();
-      // auto dev = StaticCast<LteUeNetDevice, NetDevice> (backbone->GetDevice (0));
       auto ifaces = nlohmann::json::array ();
       for (uint32_t j = 1; j < ipv4->GetNInterfaces (); j++)
         {
@@ -566,9 +541,6 @@ Scenario::operator() ()
           {{"time", 0},
            {"id", backbone->GetId ()},
            {"label", "backbone" + std::to_string (backbone->GetId ())},
-           //  {"location", {{"x", position.x}, {"y", position.y}, {"z", position.z}}},
-           //  {"txPower", dev->GetPhy ()->GetTxPower ()},
-           //  {"noise", dev->GetPhy ()->GetNoiseFigure ()},
            {"ifaces", ifaces}}));
     }
 
@@ -576,10 +548,6 @@ Scenario::operator() ()
   for (NodeList::Iterator i = NodeList::Begin (); i != NodeList::End (); ++i)
     {
       Ptr<Node> node = *i;
-      // if (node->GetDevice (0))
-      //   {
-      //     std::cout << "-node: " << node->GetId () << " found NetDevice" << std::endl;
-      //   }
       if (node->GetObject<Ipv4L3Protocol> () || node->GetObject<Ipv6L3Protocol> ())
         {
           auto ipv4 = node->GetObject<Ipv4> ();
@@ -598,9 +566,6 @@ Scenario::operator() ()
             }
         }
     }
-
-  // std::cout << m_nodesIp.dump (4) << std::endl;
-  // std::cout << jout.dump (4) << std::endl;
 
   // Flow Monitor 3
   ns3::FlowMonitorHelper flowmon;
@@ -1398,8 +1363,6 @@ public: // Access specifier
   std::string
   startSimulation (std::string req_body)
   {
-    // std::cout << "req_body: " << req_body << std::endl;
-    // std::cout << "Starting Simulation | status=" << status << std::endl;
     std::thread s_thread (&ScenarioContext::initScenario, this, req_body);
     t_handler = s_thread.native_handle ();
     s_thread.detach ();
@@ -1475,8 +1438,3 @@ main (int argc, char **argv)
 
   return 0;
 }
-
-// context:
-// - simulation
-// - status (starting, configuring, running, ended)
-// - thread
