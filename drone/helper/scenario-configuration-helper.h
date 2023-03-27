@@ -131,6 +131,15 @@ public:
    */
   const std::vector<Ptr<EntityConfiguration>> GetEntitiesConfiguration (const std::string& entityKey) const;
 
+
+  /**
+   * \brief Retrieve the schedule interval of time series metrics for this simulation.
+   *
+   * \return The double value schedule interval (in seconds) defined for this simulation.
+  */
+ const double GetTimeSeriesInterval () const;
+
+
   /**
    * \brief Retrieve the list of remotes to be defined for this simulation.
    *

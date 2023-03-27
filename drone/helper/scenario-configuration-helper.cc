@@ -245,6 +245,21 @@ ScenarioConfigurationHelper::GetEntitiesConfiguration (const std::string &entity
   return entityConf;
 }
 
+const double
+ScenarioConfigurationHelper::GetTimeSeriesInterval () const
+{
+  NS_ASSERT_MSG (m_config.HasMember ("timeSeriesMetrics"),
+                 "Please define 'timeSeriesMetrics' in your JSON configuration.");
+  NS_ASSERT_MSG (m_config["timeSeriesMetrics"].IsObject (),
+                 "'timeSeriesMetrics' defined in the JSON configuration must be an object.");
+
+  NS_ASSERT_MSG (m_config["timeSeriesMetrics"].HasMember ("reportInterval"),
+                 "Please define 'reportInterval' in your JSON configuration.");
+  NS_ASSERT_MSG (m_config["timeSeriesMetrics"]["reportInterval"].IsDouble (),
+                 "'reportInterval' element must be double.");
+  return m_config["timeSeriesMetrics"]["reportInterval"].GetDouble ();
+}
+
 const std::vector<Ptr<RemoteConfiguration>>
 ScenarioConfigurationHelper::GetRemotesConfiguration () const
 {

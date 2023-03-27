@@ -146,13 +146,17 @@ private:
   void ConfigureRegionsOfInterest ();
   void CourseChange (std::string context, Ptr<const MobilityModel> model);
   void ConfigureSimulator ();
-  void MetricsHandler (nlohmann::json *jout, nlohmann::json *nodes_ip,
-                       ns3::FlowMonitorHelper *flowmon, Ptr<ns3::FlowMonitor> *monitor,
-                       double time);
+  void MetricsHandler (nlohmann::json *jout, ns3::FlowMonitorHelper *flowmon,
+                       Ptr<ns3::FlowMonitor> *monitor, double time);
+  void IPv4Rx (const Ptr<const Packet> packet, Ptr<Ipv4> ipv4, const uint32_t interface);
+  void IPv4Tx (const Ptr<const Packet> packet, Ptr<Ipv4> ipv4, const uint32_t interface);
+  void ReportPositionNBattery (Ptr<ns3::Drone> drone, double time);
   DroneContainer m_drones;
   NodeContainer m_zsps;
   NodeContainer m_remoteNodes;
   NodeContainer m_backbone;
+  nlohmann::json m_nodesIp;
+  std::ofstream m_simple_log;
 
   std::array<std::vector<Ptr<Object>>, N_LAYERS> m_protocolStacks;
 };
@@ -161,9 +165,12 @@ NS_LOG_COMPONENT_DEFINE ("Scenario");
 
 Scenario::Scenario (std::string req_body) //, ScenarioContext *sc)
 {
-  // (*sc).status = "Running";
-  std::cout << "Running" << std::endl;
   CONFIGURATOR->Initialize (req_body);
+  // init m_simple_log
+  std::stringstream simpleLog;
+  simpleLog << CONFIGURATOR->GetResultsPath () << "simple_output.log";
+  m_simple_log.open (simpleLog.str ());
+  // end init m_simple_log
   m_drones.Create (CONFIGURATOR->GetDronesN ());
   m_zsps.Create (CONFIGURATOR->GetZspsN ());
   m_remoteNodes.Create (CONFIGURATOR->GetRemotesN ());
@@ -194,7 +201,6 @@ Scenario::Scenario (std::string req_body) //, ScenarioContext *sc)
   //DebugHelper::ProbeNodes();
   ConfigureSimulator ();
   // (*sc).status = "Done";
-  std::cout << "Done." << std::endl;
 }
 
 Scenario::~Scenario ()
@@ -203,9 +209,8 @@ Scenario::~Scenario ()
 
 //
 void
-Scenario::MetricsHandler (nlohmann::json *jout, nlohmann::json *nodes_ip,
-                          ns3::FlowMonitorHelper *flowmon, Ptr<ns3::FlowMonitor> *monitor,
-                          double time)
+Scenario::MetricsHandler (nlohmann::json *jout, ns3::FlowMonitorHelper *flowmon,
+                          Ptr<ns3::FlowMonitor> *monitor, double time)
 {
   // TODO: refatorar
   Ptr<Ipv4FlowClassifier> classifier =
@@ -235,21 +240,22 @@ Scenario::MetricsHandler (nlohmann::json *jout, nlohmann::json *nodes_ip,
                        iter->second.timeFirstTxPacket.GetSeconds ()) /
                       1024;
       // check if exists
-      if ((*nodes_ip).count (srcAddr.str ()) == 0)
+      if (m_nodesIp.count (srcAddr.str ()) == 0)
         {
           commStr = "null";
         }
       else
         {
-          communication << (*nodes_ip)[srcAddr.str ()]["label"] << "->"
-                        << (*nodes_ip)[dstAddr.str ()]["label"];
+          communication << m_nodesIp[srcAddr.str ()]["label"] << "->"
+                        << m_nodesIp[dstAddr.str ()]["label"];
           commStr = communication.str ();
           commStr.erase (std::remove (commStr.begin (), commStr.end (), '\"'), commStr.end ());
           // check type
-          if ((*nodes_ip)[srcAddr.str ()]["type"] == "drone") // drone
+          if (m_nodesIp[srcAddr.str ()]["type"] == "drone") // drone
             {
-              auto drone = m_drones.Get ((*nodes_ip)[srcAddr.str ()]["cIndex"]);
+              auto drone = m_drones.Get (m_nodesIp[srcAddr.str ()]["cIndex"]);
               auto dronePosition = drone->GetObject<MobilityModel> ()->GetPosition ();
+              auto dev = StaticCast<LteUeNetDevice, NetDevice> (drone->GetDevice (0));
               (*jout)["drones-metrics"].push_back (nlohmann::json::object (
                   {{"time", time},
                    {"node-id", drone->GetId ()},
@@ -258,7 +264,7 @@ Scenario::MetricsHandler (nlohmann::json *jout, nlohmann::json *nodes_ip,
                     {{"x", dronePosition.x}, {"y", dronePosition.y}, {"z", dronePosition.z}}},
                    {"network",
                     {{"flow-monitor-id", iter->first},
-                     {"iface", (*nodes_ip)[srcAddr.str ()]["iface"]},
+                     {"iface", m_nodesIp[srcAddr.str ()]["iface"]},
                      {"communication", commStr},
                      {"src-addr", srcAddr.str ()},
                      {"dst-addr", dstAddr.str ()},
@@ -273,17 +279,18 @@ Scenario::MetricsHandler (nlohmann::json *jout, nlohmann::json *nodes_ip,
                      {"rsrq", "TODO"},
                      {"sinr", "TODO"},
                      {"cqi", "TODO"},
-                     {"txPower", "TODO"}}}}));
+                     {"txPower", dev->GetPhy ()->GetTxPower ()},
+                     {"noise", dev->GetPhy ()->GetNoiseFigure ()}}}}));
             }
-          else if ((*nodes_ip)[srcAddr.str ()]["type"] == "zsp") // zsp
+          else if (m_nodesIp[srcAddr.str ()]["type"] == "zsp") // zsp
             {
-              auto zsp = m_zsps.Get ((*nodes_ip)[srcAddr.str ()]["cIndex"]);
+              auto zsp = m_zsps.Get (m_nodesIp[srcAddr.str ()]["cIndex"]);
               (*jout)["zsps-metrics"].push_back (
                   nlohmann::json::object ({{"time", time},
                                            {"id", zsp->GetId ()},
                                            {"network",
                                             {{"flow-monitor-id", iter->first},
-                                             {"iface", (*nodes_ip)[srcAddr.str ()]["iface"]},
+                                             {"iface", m_nodesIp[srcAddr.str ()]["iface"]},
                                              {"communication", commStr},
                                              {"src-addr", srcAddr.str ()},
                                              {"dst-addr", dstAddr.str ()},
@@ -300,15 +307,16 @@ Scenario::MetricsHandler (nlohmann::json *jout, nlohmann::json *nodes_ip,
             {
               std::stringstream jlabel;
               std::string jlabelStr;
-              jlabel << (*nodes_ip)[srcAddr.str ()]["type"] << "s-metrics";
-              jlabelStr = jlabel.str();
-              jlabelStr.erase (std::remove (jlabelStr.begin (), jlabelStr.end (), '\"'), jlabelStr.end ());
+              jlabel << m_nodesIp[srcAddr.str ()]["type"] << "s-metrics";
+              jlabelStr = jlabel.str ();
+              jlabelStr.erase (std::remove (jlabelStr.begin (), jlabelStr.end (), '\"'),
+                               jlabelStr.end ());
               (*jout)[jlabelStr].push_back (
                   nlohmann::json::object ({{"time", time},
-                                           {"node-id", (*nodes_ip)[srcAddr.str ()]["id"]},
+                                           {"node-id", m_nodesIp[srcAddr.str ()]["id"]},
                                            {"network",
                                             {{"flow-monitor-id", iter->first},
-                                             {"iface", (*nodes_ip)[srcAddr.str ()]["iface"]},
+                                             {"iface", m_nodesIp[srcAddr.str ()]["iface"]},
                                              {"communication", commStr},
                                              {"src-addr", srcAddr.str ()},
                                              {"dst-addr", dstAddr.str ()},
@@ -338,8 +346,63 @@ Scenario::MetricsHandler (nlohmann::json *jout, nlohmann::json *nodes_ip,
                                    {"throughput-kbps", thrgKbps.str ()}}));
     }
 
-  Simulator::Schedule (Seconds (1.0), &Scenario::MetricsHandler, this, jout, nodes_ip, flowmon,
-                       monitor, Simulator::Now ().GetSeconds ());
+  // for (uint32_t i = 0; i < m_zsps.GetN (); i++)
+  //   {
+  //     auto zsp = m_zsps.Get (i);
+  //     if (zsp->GetDevice (0))
+  //       {
+  //         auto dev = StaticCast<LteEnbNetDevice, NetDevice> (zsp->GetDevice (0));
+  //         std::cout << "-id: " << zsp->GetId () << " | TxPower: " << dev->GetPhy ()->GetTxPower ()
+  //                   << " | DlSpectrum" << dev->GetPhy ()->GetDlSpectrumPhy () << std::endl;
+  //       }
+  //     else
+  //       {
+  //         std::cout << "-id: " << zsp->GetId () << " LteUeNetDevice not found." << std::endl;
+  //       }
+  //   }
+
+  Simulator::Schedule (Seconds (CONFIGURATOR->GetTimeSeriesInterval ()), &Scenario::MetricsHandler,
+                       this, jout, flowmon, monitor, Simulator::Now ().GetSeconds ());
+}
+
+void
+Scenario::IPv4Rx (const Ptr<const Packet> packet, Ptr<Ipv4> ipv4, const uint32_t interface)
+{
+  Ptr<Packet> copy = packet->Copy ();
+  Ipv4Header ipHeader;
+  copy->RemoveHeader (ipHeader);
+  std::stringstream source, destination;
+  source << ipHeader.GetSource ();
+  destination << ipHeader.GetDestination ();
+  m_simple_log << Simulator::Now ().GetSeconds () << ": <" << m_nodesIp[destination.str ()]["label"]
+               << "> received Packet <" << packet->GetUid () << "> from <"
+               << m_nodesIp[source.str ()]["label"] << ">\n";
+}
+
+void
+Scenario::IPv4Tx (const Ptr<const Packet> packet, Ptr<Ipv4> ipv4, const uint32_t interface)
+{
+  Ptr<Packet> copy = packet->Copy ();
+  Ipv4Header ipHeader;
+  copy->RemoveHeader (ipHeader);
+  std::stringstream source, destination;
+  source << ipHeader.GetSource ();
+  destination << ipHeader.GetDestination ();
+  m_simple_log << Simulator::Now ().GetSeconds () << ": <" << m_nodesIp[source.str ()]["label"]
+               << "> sended Packet <" << packet->GetUid () << "> to <"
+               << m_nodesIp[destination.str ()]["label"] << ">\n";
+}
+
+void
+Scenario::ReportPositionNBattery (Ptr<ns3::Drone> drone, double time)
+{
+  auto position = drone->GetObject<MobilityModel> ()->GetPosition ();
+  m_simple_log << time << ": drone"
+               << drone->GetId () << " | Position: <x: " << position.x
+               << ", y: " << position.y << ", z:" << position.z << "> | Remaining Battery: "
+               << drone->GetObject<EnergySource> ()->GetRemainingEnergy () << "\n";
+  Simulator::Schedule (Seconds (CONFIGURATOR->GetTimeSeriesInterval ()), &Scenario::ReportPositionNBattery,
+                       this, drone, Simulator::Now ().GetSeconds ());
 }
 
 void
@@ -357,89 +420,166 @@ Scenario::operator() ()
   ShowProgress progressLog{Seconds (PROGRESS_REFRESH_INTERVAL_SECONDS),
                            (*progressLogSink->GetStream ())};
   ShowProgress progressStdout{Seconds (PROGRESS_REFRESH_INTERVAL_SECONDS), std::cout};
-
-  nlohmann::json nodes_ip;
-
   // TODO: refatorar
+  // schedule metricshandler
+  nlohmann::json jout;
+  jout["flow-metrics"] = nlohmann::json::array ();
+  jout["drones-metrics"] = nlohmann::json::array ();
+  jout["zsps-metrics"] = nlohmann::json::array ();
+  jout["nodes-metrics"] = nlohmann::json::array ();
+  jout["remoteNodes-metrics"] = nlohmann::json::array ();
+  // Init m_nodeIps
   // m_drones
   for (uint32_t i = 0; i < m_drones.GetN (); i++)
     {
       auto drone = m_drones.Get (i);
       auto ipv4 = drone->GetObject<Ipv4> ();
+      // auto dronePosition = drone->GetObject<MobilityModel> ()->GetPosition ();
+      auto dev = StaticCast<LteUeNetDevice, NetDevice> (drone->GetDevice (0));
+      auto ifaces = nlohmann::json::array ();
       for (uint32_t j = 1; j < ipv4->GetNInterfaces (); j++)
         {
-          std::stringstream ip_address;
+          std::stringstream ip_address, netmask;
           ip_address << ipv4->GetAddress (j, 0).GetAddress ();
-          // nodes_ip[ip_address.str ()] = "drone" + std::to_string (drone->GetId ()) + "_if" + std::to_string (j);
-          nodes_ip[ip_address.str ()] = nlohmann::json::object (
+          netmask << ipv4->GetAddress (j, 0).GetMask ();
+          // m_nodesIp[ip_address.str ()] = "drone" + std::to_string (drone->GetId ()) + "_if" + std::to_string (j);
+          m_nodesIp[ip_address.str ()] = nlohmann::json::object (
               {{"type", "drone"},
                {"id", drone->GetId ()},
                {"iface", "if" + std::to_string (j)},
                {"label", "drone" + std::to_string (drone->GetId ()) + "_if" + std::to_string (j)},
                {"cIndex", i}});
+          // init time-series-metrics
+          ifaces.push_back (nlohmann::json::object ({{"id", j},
+                                                     {"label", "if" + std::to_string (j)},
+                                                     {"ip", ip_address.str ()},
+                                                     {"netmask", netmask.str ()}}));
         }
+      jout["drones-metrics"].push_back (nlohmann::json::object (
+          {{"time", 0},
+           {"id", drone->GetId ()},
+           {"label", "drone" + std::to_string (drone->GetId ())},
+           //  {"location", {{"x", dronePosition.x}, {"y", dronePosition.y}, {"z", dronePosition.z}}},
+           {"txPower", dev->GetPhy ()->GetTxPower ()},
+           {"noise", dev->GetPhy ()->GetNoiseFigure ()},
+           {"ifaces", ifaces}}));
     }
+
   // m_zsps;
   for (uint32_t i = 0; i < m_zsps.GetN (); i++)
     {
       auto zsp = m_zsps.Get (i);
       auto ipv4 = zsp->GetObject<Ipv4> ();
+      auto position = zsp->GetObject<MobilityModel> ()->GetPosition ();
+      auto dev = StaticCast<LteEnbNetDevice, NetDevice> (zsp->GetDevice (0));
+      auto ifaces = nlohmann::json::array ();
       for (uint32_t j = 1; j < ipv4->GetNInterfaces (); j++)
         {
-          std::stringstream ip_address;
+          std::stringstream ip_address, netmask;
           ip_address << ipv4->GetAddress (j, 0).GetAddress ();
-          // nodes_ip[ip_address.str ()] = "zsp" + std::to_string (zsp->GetId ()) + "_if" + std::to_string (j);
-          nodes_ip[ip_address.str ()] = nlohmann::json::object (
+          netmask << ipv4->GetAddress (j, 0).GetMask ();
+          m_nodesIp[ip_address.str ()] = nlohmann::json::object (
               {{"type", "zsp"},
                {"id", zsp->GetId ()},
                {"iface", "if" + std::to_string (j)},
                {"label", "zsp" + std::to_string (zsp->GetId ()) + "_if" + std::to_string (j)},
                {"cIndex", i}});
+          // init time-series-metrics
+          ifaces.push_back (nlohmann::json::object ({{"id", j},
+                                                     {"label", "if" + std::to_string (j)},
+                                                     {"ip", ip_address.str ()},
+                                                     {"netmask", netmask.str ()}}));
         }
+      jout["zsps-metrics"].push_back (nlohmann::json::object (
+          {{"time", 0},
+           {"id", zsp->GetId ()},
+           {"label", "zsp" + std::to_string (zsp->GetId ())},
+           {"location", {{"x", position.x}, {"y", position.y}, {"z", position.z}}},
+           {"txPower", dev->GetPhy ()->GetTxPower ()},
+           {"noise", dev->GetPhy ()->GetNoiseFigure ()},
+           {"ifaces", ifaces}}));
     }
+
   // m_remoteNodes;
   for (uint32_t i = 0; i < m_remoteNodes.GetN (); i++)
     {
       auto remoteNode = m_remoteNodes.Get (i);
       auto ipv4 = remoteNode->GetObject<Ipv4> ();
+      // auto position = remoteNode->GetObject<MobilityModel> ()->GetPosition ();
+      // auto dev = StaticCast<LteUeNetDevice, NetDevice> (remoteNode->GetDevice (0));
+      auto ifaces = nlohmann::json::array ();
       for (uint32_t j = 1; j < ipv4->GetNInterfaces (); j++)
         {
-          std::stringstream ip_address;
+          std::stringstream ip_address, netmask;
           ip_address << ipv4->GetAddress (j, 0).GetAddress ();
-          // nodes_ip[ip_address.str ()] = "remoteNode" + std::to_string (remoteNode->GetId ()) + "_if" + std::to_string (j);
-          nodes_ip[ip_address.str ()] = nlohmann::json::object (
+          netmask << ipv4->GetAddress (j, 0).GetMask ();
+          m_nodesIp[ip_address.str ()] = nlohmann::json::object (
               {{"type", "remoteNode"},
                {"id", remoteNode->GetId ()},
                {"iface", "if" + std::to_string (j)},
                {"label",
                 "remoteNode" + std::to_string (remoteNode->GetId ()) + "_if" + std::to_string (j)},
                {"cIndex", i}});
+          // init time-series-metrics
+          ifaces.push_back (nlohmann::json::object ({{"id", j},
+                                                     {"label", "if" + std::to_string (j)},
+                                                     {"ip", ip_address.str ()},
+                                                     {"netmask", netmask.str ()}}));
         }
+      jout["remoteNodes-metrics"].push_back (nlohmann::json::object (
+          {{"time", 0},
+           {"id", remoteNode->GetId ()},
+           {"label", "remoteNode" + std::to_string (remoteNode->GetId ())},
+           //  {"location", {{"x", position.x}, {"y", position.y}, {"z", position.z}}},
+           //  {"txPower", dev->GetPhy ()->GetTxPower ()},
+           //  {"noise", dev->GetPhy ()->GetNoiseFigure ()},
+           {"ifaces", ifaces}}));
     }
   // m_backbone;
   for (uint32_t i = 0; i < m_backbone.GetN (); i++)
     {
+
       auto backbone = m_backbone.Get (i);
       auto ipv4 = backbone->GetObject<Ipv4> ();
+      // auto position = backbone->GetObject<MobilityModel> ()->GetPosition ();
+      // auto dev = StaticCast<LteUeNetDevice, NetDevice> (backbone->GetDevice (0));
+      auto ifaces = nlohmann::json::array ();
       for (uint32_t j = 1; j < ipv4->GetNInterfaces (); j++)
         {
-          std::stringstream ip_address;
+          std::stringstream ip_address, netmask;
           ip_address << ipv4->GetAddress (j, 0).GetAddress ();
-          // nodes_ip[ip_address.str ()] = "backbone" + std::to_string (backbone->GetId ()) + "_if" + std::to_string (j);
-          nodes_ip[ip_address.str ()] =
+          netmask << ipv4->GetAddress (j, 0).GetMask ();
+          m_nodesIp[ip_address.str ()] =
               nlohmann::json::object ({{"type", "backbone"},
                                        {"id", backbone->GetId ()},
                                        {"iface", "if" + std::to_string (j)},
                                        {"label", "backbone" + std::to_string (backbone->GetId ()) +
                                                      "_if" + std::to_string (j)},
                                        {"cIndex", i}});
+          // init time-series-metrics
+          ifaces.push_back (nlohmann::json::object ({{"id", j},
+                                                     {"label", "if" + std::to_string (j)},
+                                                     {"ip", ip_address.str ()},
+                                                     {"netmask", netmask.str ()}}));
         }
+      jout["backbones-metrics"].push_back (nlohmann::json::object (
+          {{"time", 0},
+           {"id", backbone->GetId ()},
+           {"label", "backbone" + std::to_string (backbone->GetId ())},
+           //  {"location", {{"x", position.x}, {"y", position.y}, {"z", position.z}}},
+           //  {"txPower", dev->GetPhy ()->GetTxPower ()},
+           //  {"noise", dev->GetPhy ()->GetNoiseFigure ()},
+           {"ifaces", ifaces}}));
     }
 
   // other nodes
   for (NodeList::Iterator i = NodeList::Begin (); i != NodeList::End (); ++i)
     {
       Ptr<Node> node = *i;
+      // if (node->GetDevice (0))
+      //   {
+      //     std::cout << "-node: " << node->GetId () << " found NetDevice" << std::endl;
+      //   }
       if (node->GetObject<Ipv4L3Protocol> () || node->GetObject<Ipv6L3Protocol> ())
         {
           auto ipv4 = node->GetObject<Ipv4> ();
@@ -447,9 +587,9 @@ Scenario::operator() ()
             {
               std::stringstream ip_address;
               ip_address << ipv4->GetAddress (j, 0).GetAddress ();
-              if (nodes_ip.count (ip_address.str ()) == 0)
-                // nodes_ip[ip_address.str ()] = "node" + std::to_string (node->GetId ()) + "_if" + std::to_string (j);
-                nodes_ip[ip_address.str ()] =
+              if (m_nodesIp.count (ip_address.str ()) == 0)
+                // m_nodesIp[ip_address.str ()] = "node" + std::to_string (node->GetId ()) + "_if" + std::to_string (j);
+                m_nodesIp[ip_address.str ()] =
                     nlohmann::json::object ({{"type", "node"},
                                              {"id", node->GetId ()},
                                              {"iface", "if" + std::to_string (j)},
@@ -459,22 +599,20 @@ Scenario::operator() ()
         }
     }
 
-  std::cout << nodes_ip.dump (4) << std::endl;
+  // std::cout << m_nodesIp.dump (4) << std::endl;
+  // std::cout << jout.dump (4) << std::endl;
 
   // Flow Monitor 3
   ns3::FlowMonitorHelper flowmon;
   ns3::Ptr<ns3::FlowMonitor> monitor = flowmon.InstallAll ();
 
-  // schedule metricshandler
-  nlohmann::json jout;
-  jout["flow-metrics"] = nlohmann::json::array ();
-  jout["drones-metrics"] = nlohmann::json::array ();
-  jout["zsps-metrics"] = nlohmann::json::array ();
-  jout["nodes-metrics"] = nlohmann::json::array ();
-  jout["remoteNodes-metrics"] = nlohmann::json::array ();
+  Simulator::Schedule (Seconds (CONFIGURATOR->GetTimeSeriesInterval ()), &Scenario::MetricsHandler,
+                       this, &jout, &flowmon, &monitor, Simulator::Now ().GetSeconds ());
 
-  Simulator::Schedule (Seconds (1.0), &Scenario::MetricsHandler, this, &jout, &nodes_ip, &flowmon,
-                       &monitor, Simulator::Now ().GetSeconds ());
+  Config::ConnectWithoutContext ("/NodeList/*/$ns3::Ipv4L3Protocol/Rx",
+                                 MakeCallback (&Scenario::IPv4Rx, this));
+  Config::ConnectWithoutContext ("/NodeList/*/$ns3::Ipv4L3Protocol/Tx",
+                                 MakeCallback (&Scenario::IPv4Tx, this));
 
   Simulator::Run ();
   // Report Module needs the simulator context alive to introspect it
@@ -755,6 +893,9 @@ Scenario::ConfigureEntityMobility (const std::string &entityKey,
       oss << "/NodeList/" << m_drones.Get (entityId)->GetId ()
           << "/$ns3::MobilityModel/CourseChange";
       Config::Connect (oss.str (), MakeCallback (&Scenario::CourseChange, this));
+      // Report Battery
+      Simulator::Schedule (Seconds (CONFIGURATOR->GetTimeSeriesInterval ()), &Scenario::ReportPositionNBattery,
+                       this, m_drones.Get (entityId), Simulator::Now ().GetSeconds ());
     }
   else if (entityKey == "ZSPs")
     {
@@ -800,6 +941,9 @@ Scenario::ConfigureEntityWifiStack (const std::string entityKey,
   pcapLog << CONFIGURATOR->GetResultsPath () << "wifi-phy-" << netId << "-" << entityKey << "-host";
   wifiPhy->GetWifiPhyHelper ()->EnablePcap (pcapLog.str (), entityNode->GetId (),
                                             devContainer.Get (0)->GetIfIndex ());
+
+  // Configure Tx Rx tracing
+  ns3::Packet::EnablePrinting ();
 
   return devContainer;
 }
@@ -1215,7 +1359,14 @@ Scenario::CourseChange (std::string context, Ptr<const MobilityModel> model)
           if (peripheral->GetState () == DronePeripheral::PeripheralState::ON)
             peripheral->SetState (DronePeripheral::PeripheralState::IDLE);
         }
+      m_simple_log << Simulator::Now ().GetSeconds () << ": drone"
+                   << m_drones.Get (std::stoi (id))->GetId ()
+                   << " | Peripheral State: " << peripheral->GetState () << "\n";
     }
+  // m_simple_log << Simulator::Now ().GetSeconds () << ": drone"
+  //              << m_drones.Get (std::stoi (id))->GetId () << " | Position: <x: " << position.x
+  //              << ", y: " << position.y << ", z:" << position.z << "> | Remaining Battery: "
+  //              << m_drones.Get (std::stoi (id))->GetObject<EnergySource> ()->GetRemainingEnergy () << "\n";
 }
 
 void
@@ -1247,7 +1398,6 @@ public: // Access specifier
   std::string
   startSimulation (std::string req_body)
   {
-    std::cout << "New Simulation | status=" << status << std::endl;
     // std::cout << "req_body: " << req_body << std::endl;
     // std::cout << "Starting Simulation | status=" << status << std::endl;
     std::thread s_thread (&ScenarioContext::initScenario, this, req_body);
@@ -1273,7 +1423,7 @@ public: // Access specifier
 void
 ScenarioContext::initScenario (std::string req_body)
 {
-  std::cout << "req_body: " << req_body << std::endl;
+  // std::cout << "req_body: " << req_body << std::endl;
   ns3::Scenario s (req_body);
   // s ();  // run the scenario as soon as it is ready
   status = "Running";

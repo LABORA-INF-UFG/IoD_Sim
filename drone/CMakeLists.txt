@@ -136,7 +136,7 @@ set(header_files
   model/tcp-storage-client-application.h
   model/tcp-stub-client-application.h
   model/udp-echo-client-application.h
-  model/time-series-metrics.h
+  # model/time-series-metrics.h
 )
 
 include(FindPkgConfig)
