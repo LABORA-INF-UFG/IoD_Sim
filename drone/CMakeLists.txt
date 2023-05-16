@@ -178,6 +178,6 @@ if (${PKG_CONFIG_FOUND})
                       ${gsl_LIBRARIES}
                       ${Crow_LIBRARIES} # crow
                       ${libflow-monitor} # flow-monitor
-                      ${nlohmann_json_LIBRARIES} # crow
+                      ${nlohmann_json_LIBRARIES} # modern json
   )
 endif()

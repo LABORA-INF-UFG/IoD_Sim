@@ -471,6 +471,10 @@ private:
    * \return optional parameter to be fed to `InitializeLogging()`
    */
   const bool GetLogOnFile () const;
+   /**
+   * \return optional parameter to be fed to `InitializeLogging()`
+   */
+  const bool GetFilteredLog () const;
   /**
    * \brief Optional array of log components to be enabled for the simulation.
    */

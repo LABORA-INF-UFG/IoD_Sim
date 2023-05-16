@@ -22,6 +22,7 @@
 #include <pthread.h>
 #include <iostream>
 #include <sstream>
+#include <string>
 
 // NS3 Core Components
 #include <ns3/buildings-helper.h>
@@ -86,9 +87,9 @@
 #include <rapidjson/writer.h>
 // Modern json
 #include <nlohmann/json.hpp>
+// Realtime
+#include "ns3/core-module.h"
 
-//
-// context
 class ScenarioContext;
 
 namespace ns3 {
@@ -151,6 +152,7 @@ private:
   void IPv4Rx (const Ptr<const Packet> packet, Ptr<Ipv4> ipv4, const uint32_t interface);
   void IPv4Tx (const Ptr<const Packet> packet, Ptr<Ipv4> ipv4, const uint32_t interface);
   void ReportPositionNBattery (Ptr<ns3::Drone> drone, double time);
+  void SetDronePosition (Ptr<ns3::Drone> drone);
   DroneContainer m_drones;
   NodeContainer m_zsps;
   NodeContainer m_remoteNodes;
@@ -171,6 +173,10 @@ Scenario::Scenario (std::string req_body) //, ScenarioContext *sc)
   simpleLog << CONFIGURATOR->GetResultsPath () << "simple_output.log";
   m_simple_log.open (simpleLog.str ());
   // end init m_simple_log
+  // realtime
+  GlobalValue::Bind ("SimulatorImplementationType",
+                     StringValue ("ns3::RealtimeSimulatorImpl"));
+
   m_drones.Create (CONFIGURATOR->GetDronesN ());
   m_zsps.Create (CONFIGURATOR->GetZspsN ());
   m_remoteNodes.Create (CONFIGURATOR->GetRemotesN ());
@@ -257,7 +263,7 @@ Scenario::MetricsHandler (nlohmann::json *jout, ns3::FlowMonitorHelper *flowmon,
               auto dronePosition = drone->GetObject<MobilityModel> ()->GetPosition ();
               auto dev = StaticCast<LteUeNetDevice, NetDevice> (drone->GetDevice (0));
               (*jout)["drones-metrics"].push_back (nlohmann::json::object (
-                  {{"time", time},
+                  {{"time", Simulator::Now ().GetSeconds ()},
                    {"node-id", drone->GetId ()},
                    {"battery", drone->GetObject<EnergySource> ()->GetRemainingEnergy ()},
                    {"location",
@@ -286,7 +292,7 @@ Scenario::MetricsHandler (nlohmann::json *jout, ns3::FlowMonitorHelper *flowmon,
             {
               auto zsp = m_zsps.Get (m_nodesIp[srcAddr.str ()]["cIndex"]);
               (*jout)["zsps-metrics"].push_back (
-                  nlohmann::json::object ({{"time", time},
+                  nlohmann::json::object ({{"time", Simulator::Now ().GetSeconds ()},
                                            {"id", zsp->GetId ()},
                                            {"network",
                                             {{"flow-monitor-id", iter->first},
@@ -312,7 +318,7 @@ Scenario::MetricsHandler (nlohmann::json *jout, ns3::FlowMonitorHelper *flowmon,
               jlabelStr.erase (std::remove (jlabelStr.begin (), jlabelStr.end (), '\"'),
                                jlabelStr.end ());
               (*jout)[jlabelStr].push_back (
-                  nlohmann::json::object ({{"time", time},
+                  nlohmann::json::object ({{"time", Simulator::Now ().GetSeconds ()},
                                            {"node-id", m_nodesIp[srcAddr.str ()]["id"]},
                                            {"network",
                                             {{"flow-monitor-id", iter->first},
@@ -331,7 +337,7 @@ Scenario::MetricsHandler (nlohmann::json *jout, ns3::FlowMonitorHelper *flowmon,
         }
 
       (*jout)["flow-metrics"].push_back (
-          nlohmann::json::object ({{"time", time},
+          nlohmann::json::object ({{"time", Simulator::Now ().GetSeconds ()},
                                    // {"flow-metrics",
                                    {"id", iter->first},
                                    {"communication", commStr},
@@ -382,12 +388,24 @@ void
 Scenario::ReportPositionNBattery (Ptr<ns3::Drone> drone, double time)
 {
   auto position = drone->GetObject<MobilityModel> ()->GetPosition ();
-  m_simple_log << time << ": drone"
-               << drone->GetId () << " | Position: <x: " << position.x
-               << ", y: " << position.y << ", z:" << position.z << "> | Remaining Battery: "
+  m_simple_log << Simulator::Now ().GetSeconds () << ": drone" << drone->GetId ()
+               << " | Position: <x: " << position.x << ", y: " << position.y << ", z:" << position.z
+               << "> | Remaining Battery: "
                << drone->GetObject<EnergySource> ()->GetRemainingEnergy () << "\n";
-  Simulator::Schedule (Seconds (CONFIGURATOR->GetTimeSeriesInterval ()), &Scenario::ReportPositionNBattery,
-                       this, drone, Simulator::Now ().GetSeconds ());
+  Simulator::Schedule (Seconds (CONFIGURATOR->GetTimeSeriesInterval ()),
+                       &Scenario::ReportPositionNBattery, this, drone,
+                       Simulator::Now ().GetSeconds ());
+}
+
+void
+Scenario::SetDronePosition (Ptr<ns3::Drone> drone)
+{
+  auto mobility = drone->GetObject<MobilityModel> ();
+  auto position = mobility->GetPosition ();
+  auto newPosition = Vector(position.x+1, position.y, position.z);
+  mobility->SetPosition(newPosition);
+  std::cout << "New location = [" << newPosition.x << "," << newPosition.y << "," << newPosition.z << "]" << std::endl;
+  Simulator::Schedule (Seconds (1.0), &Scenario::SetDronePosition, this, drone);
 }
 
 void
@@ -438,13 +456,13 @@ Scenario::operator() ()
                                                      {"ip", ip_address.str ()},
                                                      {"netmask", netmask.str ()}}));
         }
-      jout["drones-metrics"].push_back (nlohmann::json::object (
-          {{"time", 0},
-           {"id", drone->GetId ()},
-           {"label", "drone" + std::to_string (drone->GetId ())},
-           {"txPower", dev->GetPhy ()->GetTxPower ()},
-           {"noise", dev->GetPhy ()->GetNoiseFigure ()},
-           {"ifaces", ifaces}}));
+      jout["drones-metrics"].push_back (
+          nlohmann::json::object ({{"time", 0},
+                                   {"id", drone->GetId ()},
+                                   {"label", "drone" + std::to_string (drone->GetId ())},
+                                   {"txPower", dev->GetPhy ()->GetTxPower ()},
+                                   {"noise", dev->GetPhy ()->GetNoiseFigure ()},
+                                   {"ifaces", ifaces}}));
     }
 
   // m_zsps;
@@ -506,11 +524,11 @@ Scenario::operator() ()
                                                      {"ip", ip_address.str ()},
                                                      {"netmask", netmask.str ()}}));
         }
-      jout["remoteNodes-metrics"].push_back (nlohmann::json::object (
-          {{"time", 0},
-           {"id", remoteNode->GetId ()},
-           {"label", "remoteNode" + std::to_string (remoteNode->GetId ())},
-           {"ifaces", ifaces}}));
+      jout["remoteNodes-metrics"].push_back (
+          nlohmann::json::object ({{"time", 0},
+                                   {"id", remoteNode->GetId ()},
+                                   {"label", "remoteNode" + std::to_string (remoteNode->GetId ())},
+                                   {"ifaces", ifaces}}));
     }
   // m_backbone;
   for (uint32_t i = 0; i < m_backbone.GetN (); i++)
@@ -537,11 +555,11 @@ Scenario::operator() ()
                                                      {"ip", ip_address.str ()},
                                                      {"netmask", netmask.str ()}}));
         }
-      jout["backbones-metrics"].push_back (nlohmann::json::object (
-          {{"time", 0},
-           {"id", backbone->GetId ()},
-           {"label", "backbone" + std::to_string (backbone->GetId ())},
-           {"ifaces", ifaces}}));
+      jout["backbones-metrics"].push_back (
+          nlohmann::json::object ({{"time", 0},
+                                   {"id", backbone->GetId ()},
+                                   {"label", "backbone" + std::to_string (backbone->GetId ())},
+                                   {"ifaces", ifaces}}));
     }
 
   // other nodes
@@ -859,8 +877,11 @@ Scenario::ConfigureEntityMobility (const std::string &entityKey,
           << "/$ns3::MobilityModel/CourseChange";
       Config::Connect (oss.str (), MakeCallback (&Scenario::CourseChange, this));
       // Report Battery
-      Simulator::Schedule (Seconds (CONFIGURATOR->GetTimeSeriesInterval ()), &Scenario::ReportPositionNBattery,
-                       this, m_drones.Get (entityId), Simulator::Now ().GetSeconds ());
+      Simulator::Schedule (Seconds (CONFIGURATOR->GetTimeSeriesInterval ()),
+                           &Scenario::ReportPositionNBattery, this, m_drones.Get (entityId),
+                           Simulator::Now ().GetSeconds ());
+      // Change location
+      // Simulator::Schedule (Seconds (1.0), &Scenario::SetDronePosition, this, m_drones.Get (entityId));
     }
   else if (entityKey == "ZSPs")
     {
@@ -1349,7 +1370,6 @@ Scenario::ConfigureSimulator ()
 } // namespace ns3
 
 // Scenario Context
-// context
 class ScenarioContext
 { // The class
 private:
@@ -1357,7 +1377,7 @@ private:
 
 public: // Access specifier
   std::string status; // Attribute (string variable)
-  // ns3::Scenario scenario;
+  // ns3::Scenario *scenario;
   pthread_t t_handler;
 
   std::string
@@ -1381,6 +1401,24 @@ public: // Access specifier
     status = "Stopped";
     return "Simulation Stopped";
   }
+
+  std::string
+  changeCurse (std::string req_body)
+  {
+    nlohmann::json req = nlohmann::json::parse(req_body);
+    std::cout << req.dump() << std::endl;
+    uint32_t node_id = req["drone_id"];
+    auto drone = ns3::NodeList::GetNode(node_id);
+
+    // change position
+    auto mobility = drone->GetObject<ns3::MobilityModel> ();
+    // auto position = mobility->GetPosition ();
+
+    auto newPosition = ns3::Vector(req["position"]["x"], req["position"]["y"], req["position"]["z"]);
+    mobility->SetPosition(newPosition);
+    std::cout << "New location = [" << newPosition.x << "," << newPosition.y << "," << newPosition.z << "]" << std::endl;
+    return "Position changed";
+  }
 };
 
 void
@@ -1403,13 +1441,6 @@ main (int argc, char **argv)
 
   bool created = false;
 
-  CROW_ROUTE (app, "/simulation")
-  ([] () {
-    // Simulator::Run ();
-    // Simulator::Destroy ();
-    return "Simulation Done";
-  });
-
   CROW_ROUTE (app, "/simulation").methods (crow::HTTPMethod::POST) ([&] (const crow::request &req) {
     auto body = crow::json::load (req.body);
     if (created)
@@ -1421,6 +1452,18 @@ main (int argc, char **argv)
     sc.startSimulation (req.body);
 
     return crow::response (200, "Simulation started");
+  });
+
+  CROW_ROUTE (app, "/change_position").methods (crow::HTTPMethod::POST) ([&] (const crow::request &req) {
+    auto body = crow::json::load (req.body);
+    if (!created)
+      return crow::response (400, "Simulation did not start");
+    if (!body)
+      return crow::response (400, "Invalid body");
+
+    sc.changeCurse (req.body);
+
+    return crow::response (200, "Position changed");
   });
 
   CROW_ROUTE (app, "/simulation")

@@ -35,6 +35,96 @@
 #include <ns3/remote-configuration-helper.h>
 #include <ns3/system-path.h>
 
+// FilteredLog
+#include <iostream>
+#include <fstream>
+#include <regex>
+#include <streambuf>
+#include <string>
+
+// FILTERED_LOG ---------------------
+class FilteredLog : public std::streambuf
+{
+public:
+  FilteredLog (std::streambuf *oldBuffer) : m_oldBuffer (oldBuffer)
+  {
+    // Initialize the regex pattern to match the node number
+    m_nodePattern = std::regex ("\\[Node (\\d+)\\]");
+  }
+
+protected:
+  virtual int_type
+  overflow (int_type c)
+  {
+    if (c == '\n')
+      {
+        filter ();
+        m_message.clear ();
+      }
+    else
+      m_message += static_cast<char> (c);
+    return m_oldBuffer->sputc (c);
+  }
+
+private:
+  std::streambuf *m_oldBuffer;
+  std::string m_message;
+  std::regex m_nodePattern;
+
+  void
+  filter ()
+  {
+    // Filter each row of clog based on its content
+    std::ofstream outfile;
+    outfile.open(ns3::CONFIGURATOR->GetResultsPath () + getFilteredLogFilename (), std::ios::app);
+    outfile << m_message << std::endl;
+    // Close the file
+    outfile.close ();
+  }
+
+  int
+  getContextNodeNumber ()
+  {
+    // Extract the substring starting from the character after the space
+    size_t space_pos = m_message.find_first_of (" ");
+    if (space_pos != std::string::npos)
+      {
+        // Extract the substring starting from the character after the space
+        std::string number_str = m_message.substr (space_pos + 1);
+
+        // Convert the substring to a number and print it
+        int number = std::stoi (number_str);
+        return number;
+      }
+    return -1;
+  }
+
+  int
+  getPatternNodeNumber ()
+  {
+    std::smatch matches;
+    if (std::regex_search (m_message, matches, m_nodePattern))
+      return std::stoi (matches[1]);
+    else
+      return -1;
+  }
+
+  std::string
+  getFilteredLogFilename ()
+  {
+    int nodeNumber = getPatternNodeNumber ();
+    if (nodeNumber < 0)
+      nodeNumber = getContextNodeNumber ();
+    if (nodeNumber < 0)
+      return "scenario_setup.log";
+    std::string courseSufix = "";
+    if (m_message.find ("CourseChange") != std::string::npos)
+      courseSufix = "_course";
+    return "node_" + std::to_string (nodeNumber) + courseSufix + ".log";
+  }
+};
+// FILTERED LOG -------------------
+
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE_MASK ("ScenarioConfigurationHelper", LOG_PREFIX_ALL);
@@ -748,12 +838,23 @@ ScenarioConfigurationHelper::InitializeLogging (const bool &onFile)
     {
       m_out = std::ofstream (GetLoggingFilePath ());
       std::clog.rdbuf (m_out.rdbuf ());
+      if (CONFIGURATOR->GetFilteredLog ())
+      {
+        // FILTERED LOG -----------------
+      // Save the old stream buffer for clog
+      std::streambuf *oldBuffer = std::clog.rdbuf ();
+
+      // Replace the stream buffer for clog with a custom buffer
+      std::clog.rdbuf (new FilteredLog (oldBuffer));
+      // END FILTERED LOG -----------------
+      }
     }
 
   NS_LOG_INFO ("####");
   NS_LOG_INFO ("# Drone Simulation");
   NS_LOG_INFO ("# Scenario: " << GetName ());
   NS_LOG_INFO ("# Date: " << GetCurrentDateTime ());
+  NS_LOG_INFO ("# Filtered Log:" << CONFIGURATOR->GetFilteredLog ());
   NS_LOG_INFO ("####");
 
   NS_LOG_LOGIC ("Number of drones: " << GetDronesN ());
@@ -787,6 +888,21 @@ ScenarioConfigurationHelper::GetLogOnFile () const
     {
       NS_ASSERT_MSG (m_config["logOnFile"].IsBool (), "'logOnFile' property must be boolean.");
       return m_config["logOnFile"].GetBool ();
+    }
+  else
+    {
+      return false;
+    }
+}
+
+const bool
+ScenarioConfigurationHelper::GetFilteredLog () const
+{
+  // this is an optional parameter. Default to false if not specified.
+  if (m_config.HasMember ("filteredLog"))
+    {
+      NS_ASSERT_MSG (m_config["filteredLog"].IsBool (), "'filteredLog' property must be boolean.");
+      return m_config["filteredLog"].GetBool ();
     }
   else
     {
