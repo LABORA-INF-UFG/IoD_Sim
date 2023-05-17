@@ -37,13 +37,16 @@ RUN apt-get update \
         git
 
 # Install IoD_Sim
-RUN git clone https://github.com/telematics-lab/IoD_Sim
+# Dependencies
+RUN ./tools/install-dependencies.sh
+
+#RUN git clone https://github.com/telematics-lab/IoD_Sim
 
 WORKDIR /IoD_Sim
+COPY . .
 
-# Run scripts
-RUN ./tools/install-dependencies.sh
-RUN ./tools/prepare-ns3.sh
-RUN cd ns3/ \
-    && ./ns3 configure --build-profile=debug --enable-examples --disable-mpi --disable-python --enable-modules=iodsim \
-    && ./ns3 build
+# Config scripts
+#RUN ./tools/prepare-ns3.sh
+#RUN cd ns3/ \
+#    && ./ns3 configure --build-profile=debug --enable-examples --disable-mpi --disable-python --enable-modules=iodsim \
+#    && ./ns3 build
