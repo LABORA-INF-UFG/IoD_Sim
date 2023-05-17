@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  iod-sim:
+    container_name: iod-sim
+    build: .
+    image: iod-sim
+    volumes:
+      - ./results/:/IoD_Sim/results
+    network_mode: "host"
+    # command: 'cd ns3 && ./ns3 run "iodsim"'
+    command: "tail -f /dev/null"
