@@ -1560,6 +1560,7 @@ ScenarioContext::createScenario(std::string reqBody)
     status = "Running";
     s();
     status = "Ended";
+    exit(EXIT_SUCCESS);
 }
 
 int
