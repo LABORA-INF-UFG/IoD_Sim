@@ -276,13 +276,12 @@ DroneClientApplication::ReceivePacket(const Ptr<Socket> socket)
         {
             const auto senderIpv4 = InetSocketAddress::ConvertFrom(senderAddr).GetIpv4();
 
-            NS_LOG_INFO("[Node " << GetNode()->GetId() << "] client received " << packet->GetSize()
-                                 << " bytes from " << senderIpv4);
-
             uint8_t* payload = (uint8_t*)calloc(packet->GetSize() + 1, sizeof(uint8_t));
             packet->CopyData(payload, packet->GetSize());
 
-            NS_LOG_INFO("[Node " << GetNode()->GetId() << "] packet contents: " << (char*)payload);
+            NS_LOG_INFO("[Node " << GetNode()->GetId() << "] client received " << packet->GetSize()
+                                 << " bytes from " << senderIpv4
+                                 << ". Packet contents: " << (char*)payload);
 
             rapidjson::Document d;
             d.Parse((char*)payload);

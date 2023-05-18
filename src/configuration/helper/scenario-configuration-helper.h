@@ -59,6 +59,12 @@ class ScenarioConfigurationHelper : public Singleton<ScenarioConfigurationHelper
 
     /**
      * \brief Bootstrap Singleton with basic data.
+     * \param body The scenario description JSON file.
+     */
+    void Initialize(std::string body);
+
+    /**
+     * \brief Bootstrap Singleton with basic data.
      * \param argc The number of command line arguments.
      * \param argv The list of command line arguments.
      */
@@ -99,6 +105,11 @@ class ScenarioConfigurationHelper : public Singleton<ScenarioConfigurationHelper
      * \return The file path of the logging file.
      */
     const std::string GetLoggingFilePath();
+
+    /**
+     * \return optional parameter to be fed to `InitializeLogging()`
+     */
+    const bool GetFilteredLog() const;
 
     /**
      * \brief Retrieve Static Configuration Parameters as a key/value pair.
@@ -142,6 +153,13 @@ class ScenarioConfigurationHelper : public Singleton<ScenarioConfigurationHelper
      * \return The list of remotes to be defined for this simulation.
      */
     const std::vector<Ptr<RemoteConfiguration>> GetRemotesConfiguration() const;
+
+    /**
+     * \brief Retrieve the schedule interval of time series metrics for this simulation.
+     *
+     * \return The double value schedule interval (in seconds) defined for this simulation.
+     */
+    const double GetTimeSeriesInterval() const;
 
     /**
      * \return The duration of the simulation in seconds.
@@ -452,6 +470,11 @@ class ScenarioConfigurationHelper : public Singleton<ScenarioConfigurationHelper
     const std::pair<bool, std::string> GetString(const std::string& path) const;
 
   private:
+    /**
+     * \brief part of the constructor, it focuses on command line decoding and JSON file parsing.
+     * \param body the scenario description JSON file.
+     */
+    void InitializeConfiguration(std::string body);
     /**
      * \brief part of the constructor, it focuses on command line decoding and JSON file parsing.
      * \param argc the command line argument count number.

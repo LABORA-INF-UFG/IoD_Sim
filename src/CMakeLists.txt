@@ -212,6 +212,28 @@ set(header_files
   world/interest-region.h
 )
 
+# Import dependencies (check docs for correct way)
+
+# crow lib
+include(FindPkgConfig)
+add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
+find_package(Crow REQUIRED)
+# morden json lib
+include(FetchContent)
+FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz)
+FetchContent_MakeAvailable(json)
+
+# include DIRS
+pkg_check_modules(THIRD_PARTY RapidJSON REQUIRED)
+pkg_check_modules(THIRD_PARTY gsl REQUIRED)
+pkg_check_modules(THIRD_PARTY libxml-2.0 REQUIRED)
+
+include_directories(${RapidJSON_INCLUDE_DIRS}
+                    ${gsl_INCLUDE_DIRS}
+                    ${Crow_INCLUDE_DIRS} # crow
+                    ${nlohmann_json_INCLUDE_DIRS} # crow
+                    )
+
 build_lib(
   LIBNAME iodsim
   SOURCE_FILES ${source_files}
@@ -222,6 +244,9 @@ build_lib(
                     ${liblte}
                     ${libwifi}
                     ${libmobility}
+                    ${Crow_LIBRARIES} # crow
+                    ${libflow-monitor} # flow-monitor
+                    ${nlohmann_json_LIBRARIES} # modern json
 )
 
 build_example(
