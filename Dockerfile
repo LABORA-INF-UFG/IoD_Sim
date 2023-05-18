@@ -7,39 +7,40 @@ ENV DEBIAN_FRONTEND=noninteractive
 ####
 RUN apt-get update \
     && apt-get install --no-install-recommends --quiet --assume-yes \
-        git \
-        gcc \
-        g++ \
-        gdb \
-        valgrind \
-        patch \
-        ssh \
-        sudo \
-        # ns3 dependencies
-        python3 \
-        python-is-python3 \
-        python3-dev \
-        python3-pip \
-        python3-pybindgen \
-        python3-pygccxml \
-        pkg-config \
-        sqlite3 \
-        #libgtk-3-dev \
-        #libsqlite3-dev \
-        # pybindgen dependencies
-        #libboost-dev \
-        #castxml \
-        # IoD_Sim dependencies
-        rapidjson-dev \
-        libgsl-dev \
-        libxml2-dev \
-        # Fork dependencies
-        git
+    git \
+    gcc \
+    g++ \
+    gdb \
+    valgrind \
+    patch \
+    ssh \
+    sudo \
+    # ns3 dependencies
+    python3 \
+    python-is-python3 \
+    python3-dev \
+    python3-pip \
+    python3-pybindgen \
+    python3-pygccxml \
+    pkg-config \
+    sqlite3 \
+    #libgtk-3-dev \
+    #libsqlite3-dev \
+    # pybindgen dependencies
+    #libboost-dev \
+    #castxml \
+    # IoD_Sim dependencies
+    rapidjson-dev \
+    libgsl-dev \
+    libxml2-dev \
+    # Fork dependencies
+    git
 
 # Install IoD_Sim
-RUN git clone https://github.com/telematics-lab/IoD_Sim
+#RUN git clone https://github.com/telematics-lab/IoD_Sim
 
 WORKDIR /IoD_Sim
+COPY . .
 
 # Run scripts
 RUN ./tools/install-dependencies.sh

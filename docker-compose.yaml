@@ -8,5 +8,5 @@ services:
     volumes:
       - ./results/:/IoD_Sim/results
     network_mode: "host"
-    # command: 'cd ns3 && ./ns3 run "iodsim"'
-    command: "tail -f /dev/null"
+    command: 'cd ns3 && ./ns3 run "iodsim"'
+    # command: "tail -f /dev/null" # debug
