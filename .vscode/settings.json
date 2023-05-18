@@ -96,7 +96,9 @@
         "numbers": "cpp",
         "queue": "cpp",
         "semaphore": "cpp",
-        "stop_token": "cpp"
+        "stop_token": "cpp",
+        "filesystem": "cpp",
+        "valarray": "cpp"
     },
     "git.ignoreLimitWarning": true,
     "git.ignoredRepositories": [
@@ -115,5 +117,6 @@
     "clang-tidy.buildPath": "ns3/cmake-cache",
     "editor.formatOnSave": true,
     "editor.formatOnPaste": true,
-    "editor.formatOnType": true
+    "editor.formatOnType": true,
+    "editor.autoIndent": "none"
 }
