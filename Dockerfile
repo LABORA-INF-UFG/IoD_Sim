@@ -34,17 +34,25 @@ RUN apt-get update \
     libgsl-dev \
     libxml2-dev \
     # Fork dependencies
-    git
+    libboost-all-dev \
+    wget \
+    nlohmann-json3-dev
 
-# Install IoD_Sim
-#RUN git clone https://github.com/telematics-lab/IoD_Sim
+RUN wget https://github.com/CrowCpp/Crow/releases/download/v1.0%2B5/crow-v1.0+5.deb \
+    && apt install ./crow-v1.0+5.deb
 
+# Instal IoD_Sim
+# - Option 1:
+RUN git clone https://github.com/LABORA-INF-UFG/IoD_Sim
 WORKDIR /IoD_Sim
-COPY . .
+# - Option 2:
+# WORKDIR /IoD_Sim
+# COPY . .
 
-# Run scripts
 RUN ./tools/install-dependencies.sh
 RUN ./tools/prepare-ns3.sh
 RUN cd ns3/ \
     && ./ns3 configure --build-profile=debug --enable-examples --disable-mpi --disable-python --enable-modules=iodsim \
     && ./ns3 build
+
+CMD [ "/IoD_Sim/ns3/ns3", "run", "iodsim" ]
