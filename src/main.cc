@@ -83,7 +83,6 @@ class ScenarioContext;
 
 namespace ns3
 {
-
 constexpr int N_LAYERS = 4;
 constexpr int PHY_LAYER = 0;
 constexpr int MAC_LAYER = 1;
@@ -1048,7 +1047,8 @@ Scenario::ConfigureLteUe(Ptr<Node> entityNode,
                          const std::optional<ModelConfiguration> antennaModel,
                          const std::optional<ModelConfiguration> phyConf)
 {
-    // NOTICE: no checks are made for ue/netid combination that do not represent an LTE backbone!
+    // NOTICE: no checks are made for ue/netid combination that do not represent an LTE
+    // backbone!
     static std::vector<NodeContainer> uePerStack(m_protocolStacks[PHY_LAYER].size());
     auto ltePhy = StaticCast<LtePhySimulationHelper, Object>(m_protocolStacks[PHY_LAYER][netId]);
     auto lteHelper = ltePhy->GetLteHelper();
@@ -1504,7 +1504,50 @@ Scenario::ConfigureSimulator()
 
 } // namespace ns3
 
+void
+ChangeNodeCourse(u_int32_t nodeId,
+                 ns3::Vector acceleration,
+                 ns3::Vector velocity,
+                 double stopTime,
+                 double time)
+{
+    auto node = ns3::NodeList::GetNode(nodeId);
+    // auto mobility = node->GetObject<ns3::ConstantVelocityMobilityModel>();
+    auto mobility = node->GetObject<ns3::ConstantAccelerationMobilityModel>();
+    // auto position = mobility->GetPosition();
+
+    velocity.x = velocity.x + acceleration.x * 0.2;
+    velocity.y = velocity.x + acceleration.y * 0.2;
+    velocity.z = velocity.x + acceleration.z * 0.2;
+    // position.x = position.x + velocity.x * 0.2;
+    // position.y = position.y + velocity.y * 0.2;
+    // position.z = position.z + velocity.z * 0.2;
+
+    // mobility->SetPosition(position);
+    // mobility->SetVelocity(velocity);
+    mobility->SetVelocityAndAcceleration(velocity, acceleration);
+    // std::cout << "New location = [" << position.x << "," << position.y << "," << position.z
+    //           << "]. New velocity = [" << velocity.x << "," << velocity.y << "," << velocity.z
+    //           << "]" << std::endl;
+    if (time < stopTime)
+    {
+        ns3::Simulator::Schedule(ns3::Seconds(0.2),
+                                 &ChangeNodeCourse,
+                                 nodeId,
+                                 acceleration,
+                                 velocity,
+                                 stopTime,
+                                 ns3::Simulator::Now().GetSeconds());
+    }
+    else
+    {
+        // mobility->SetVelocity(ns3::Vector(0, 0, 0));
+        mobility->SetVelocityAndAcceleration(ns3::Vector(0, 0, 0), ns3::Vector(0, 0, 0));
+    }
+}
+
 class ScenarioContext
+
 {
   private:
     void createScenario(std::string reqBody);
@@ -1533,22 +1576,30 @@ class ScenarioContext
         return "Simulation Stopped";
     }
 
-    std::string changeCurse(std::string reqBody)
+    std::string changeCourse(std::string reqBody)
     {
         nlohmann::json req = nlohmann::json::parse(reqBody);
         std::cout << req.dump() << std::endl;
-        uint32_t node_id = req["drone_id"];
-        auto drone = ns3::NodeList::GetNode(node_id);
+        uint32_t nodeId = req["drone_id"];
+        double timeStop = req["time"];
+        auto drone = ns3::NodeList::GetNode(nodeId);
+        auto acceleration = ns3::Vector(req["acceleration"]["x"],
+                                        req["acceleration"]["y"],
+                                        req["acceleration"]["z"]);
 
-        // change position
-        auto mobility = drone->GetObject<ns3::MobilityModel>();
-        // auto position = mobility->GetPosition ();
+        ns3::Simulator::Schedule(ns3::Seconds(0.2),
+                                 &ChangeNodeCourse,
+                                 nodeId,
+                                 acceleration,
+                                 ns3::Vector(0, 0, 0),
+                                 ns3::Simulator::Now().GetSeconds() + timeStop,
+                                 ns3::Simulator::Now().GetSeconds());
 
-        auto newPosition =
-            ns3::Vector(req["position"]["x"], req["position"]["y"], req["position"]["z"]);
-        mobility->SetPosition(newPosition);
-        std::cout << "New location = [" << newPosition.x << "," << newPosition.y << ","
-                  << newPosition.z << "]" << std::endl;
+        // auto newPosition =
+        //     ns3::Vector(req["position"]["x"], req["position"]["y"], req["position"]["z"]);
+        // // mobility->SetPosition(newPosition);
+        // std::cout << "New location = [" << newPosition.x << "," << newPosition.y << ","
+        //           << newPosition.z << "]" << std::endl;
         return "Position changed";
     }
 };
@@ -1590,7 +1641,7 @@ main(int argc, char** argv)
             if (!body)
                 return crow::response(400, "Invalid body");
 
-            sc.changeCurse(req.body);
+            sc.changeCourse(req.body);
             return crow::response(200, "Position changed");
         });
 

@@ -27,7 +27,9 @@ MobilityFactoryHelper::SetMobilityModel(MobilityHelper& helper, const ModelConfi
 {
     helper.m_mobility.SetTypeId(modelConf.GetName());
 
-    if (modelConf.GetName() == "ns3::ConstantPositionMobilityModel")
+    if (modelConf.GetName() == "ns3::ConstantPositionMobilityModel" ||
+        modelConf.GetName() == "ns3::ConstantVelocityMobilityModel" ||
+        modelConf.GetName() == "ns3::ConstantAccelerationMobilityModel")
     {
         if (modelConf.GetAttributes().size() == 0)
             return;
