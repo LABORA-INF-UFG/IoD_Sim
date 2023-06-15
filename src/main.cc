@@ -98,6 +98,9 @@ class Scenario
 
     void operator()();
 
+    nlohmann::json m_nodesIp;
+    nlohmann::json m_nodesInfo;
+
   private:
     void GenerateRadioMap();
     void GenerateThreeDimensionalRem();
@@ -152,19 +155,17 @@ class Scenario
     void ConfigureRegionsOfInterest();
     void CourseChange(std::string context, Ptr<const MobilityModel> model);
     void ConfigureSimulator();
-    void MetricsHandler(nlohmann::json* nodes_info,
-                        ns3::FlowMonitorHelper* flowmon,
+    void MetricsHandler(ns3::FlowMonitorHelper* flowmon,
                         Ptr<ns3::FlowMonitor>* monitor,
-                        double time);
-    nlohmann::json GetNodesInfo();
+                        double time,
+                        bool scheduling);
+    void GetNodesInfo();
 
     NodeContainer m_plainNodes;
     DroneContainer m_drones;
     NodeContainer m_zsps;
     NodeContainer m_remoteNodes;
     NodeContainer m_backbone;
-    nlohmann::json m_nodesIp;
-
     std::array<std::vector<Ptr<Object>>, N_LAYERS> m_protocolStacks;
 };
 
@@ -212,10 +213,10 @@ Scenario::~Scenario()
 }
 
 void
-Scenario::MetricsHandler(nlohmann::json* nodes_info,
-                         ns3::FlowMonitorHelper* flowmon,
+Scenario::MetricsHandler(ns3::FlowMonitorHelper* flowmon,
                          Ptr<ns3::FlowMonitor>* monitor,
-                         double time)
+                         double time,
+                         bool scheduling)
 {
     // TODO: refatorar
     Ptr<Ipv4FlowClassifier> classifier =
@@ -262,7 +263,7 @@ Scenario::MetricsHandler(nlohmann::json* nodes_info,
                 auto drone = m_drones.Get(m_nodesIp[srcAddr.str()]["cIndex"]);
                 auto dronePosition = drone->GetObject<MobilityModel>()->GetPosition();
                 auto dev = StaticCast<LteUeNetDevice, NetDevice>(drone->GetDevice(0));
-                (*nodes_info)["drones-metrics"].push_back(nlohmann::json::object(
+                (m_nodesInfo)["drones-metrics"].push_back(nlohmann::json::object(
                     {{"time", Simulator::Now().GetSeconds()},
                      {"node-id", drone->GetId()},
                      {"battery", drone->GetObject<EnergySource>()->GetRemainingEnergy()},
@@ -291,7 +292,7 @@ Scenario::MetricsHandler(nlohmann::json* nodes_info,
             else if (m_nodesIp[srcAddr.str()]["type"] == "zsp") // zsp
             {
                 auto zsp = m_zsps.Get(m_nodesIp[srcAddr.str()]["cIndex"]);
-                (*nodes_info)["zsps-metrics"].push_back(
+                (m_nodesInfo)["zsps-metrics"].push_back(
                     nlohmann::json::object({{"time", Simulator::Now().GetSeconds()},
                                             {"id", zsp->GetId()},
                                             {"network",
@@ -317,7 +318,7 @@ Scenario::MetricsHandler(nlohmann::json* nodes_info,
                 jlabelStr = jlabel.str();
                 jlabelStr.erase(std::remove(jlabelStr.begin(), jlabelStr.end(), '\"'),
                                 jlabelStr.end());
-                (*nodes_info)[jlabelStr].push_back(
+                (m_nodesInfo)[jlabelStr].push_back(
                     nlohmann::json::object({{"time", Simulator::Now().GetSeconds()},
                                             {"node-id", m_nodesIp[srcAddr.str()]["id"]},
                                             {"network",
@@ -336,7 +337,7 @@ Scenario::MetricsHandler(nlohmann::json* nodes_info,
             }
         }
 
-        (*nodes_info)["flow-metrics"].push_back(
+        (m_nodesInfo)["flow-metrics"].push_back(
             nlohmann::json::object({{"time", Simulator::Now().GetSeconds()},
                                     // {"flow-metrics",
                                     {"id", iter->first},
@@ -351,25 +352,26 @@ Scenario::MetricsHandler(nlohmann::json* nodes_info,
                                     {"jitter", jitter.str()},
                                     {"throughput-kbps", thrgKbps.str()}}));
     }
-
-    Simulator::Schedule(Seconds(CONFIGURATOR->GetTimeSeriesInterval()),
-                        &Scenario::MetricsHandler,
-                        this,
-                        nodes_info,
-                        flowmon,
-                        monitor,
-                        Simulator::Now().GetSeconds());
+    if (scheduling)
+    {
+        Simulator::Schedule(Seconds(CONFIGURATOR->GetTimeSeriesInterval()),
+                            &Scenario::MetricsHandler,
+                            this,
+                            flowmon,
+                            monitor,
+                            Simulator::Now().GetSeconds(),
+                            true);
+    }
 }
 
-nlohmann::json
+void
 Scenario::GetNodesInfo()
 {
-    nlohmann::json nodes_info;
-    nodes_info["flow-metrics"] = nlohmann::json::array();
-    nodes_info["drones-metrics"] = nlohmann::json::array();
-    nodes_info["zsps-metrics"] = nlohmann::json::array();
-    nodes_info["nodes-metrics"] = nlohmann::json::array();
-    nodes_info["remoteNodes-metrics"] = nlohmann::json::array();
+    m_nodesInfo["flow-metrics"] = nlohmann::json::array();
+    m_nodesInfo["drones-metrics"] = nlohmann::json::array();
+    m_nodesInfo["zsps-metrics"] = nlohmann::json::array();
+    m_nodesInfo["nodes-metrics"] = nlohmann::json::array();
+    m_nodesInfo["remoteNodes-metrics"] = nlohmann::json::array();
     // drones
     for (uint32_t i = 0; i < m_drones.GetN(); i++)
     {
@@ -394,7 +396,7 @@ Scenario::GetNodesInfo()
                                                      {"ip", ip_address.str()},
                                                      {"netmask", netmask.str()}}));
         }
-        nodes_info["drones-metrics"].push_back(
+        m_nodesInfo["drones-metrics"].push_back(
             nlohmann::json::object({{"time", 0},
                                     {"id", drone->GetId()},
                                     {"label", "drone" + std::to_string(drone->GetId())},
@@ -427,7 +429,7 @@ Scenario::GetNodesInfo()
                                                      {"ip", ip_address.str()},
                                                      {"netmask", netmask.str()}}));
         }
-        nodes_info["zsps-metrics"].push_back(nlohmann::json::object(
+        m_nodesInfo["zsps-metrics"].push_back(nlohmann::json::object(
             {{"time", 0},
              {"id", zsp->GetId()},
              {"label", "zsp" + std::to_string(zsp->GetId())},
@@ -460,7 +462,7 @@ Scenario::GetNodesInfo()
                                                      {"ip", ip_address.str()},
                                                      {"netmask", netmask.str()}}));
         }
-        nodes_info["remoteNodes-metrics"].push_back(
+        m_nodesInfo["remoteNodes-metrics"].push_back(
             nlohmann::json::object({{"time", 0},
                                     {"id", remoteNode->GetId()},
                                     {"label", "remoteNode" + std::to_string(remoteNode->GetId())},
@@ -490,7 +492,7 @@ Scenario::GetNodesInfo()
                                                      {"ip", ip_address.str()},
                                                      {"netmask", netmask.str()}}));
         }
-        nodes_info["backbones-metrics"].push_back(
+        m_nodesInfo["backbones-metrics"].push_back(
             nlohmann::json::object({{"time", 0},
                                     {"id", backbone->GetId()},
                                     {"label", "backbone" + std::to_string(backbone->GetId())},
@@ -508,7 +510,8 @@ Scenario::GetNodesInfo()
                 std::stringstream ip_address;
                 ip_address << ipv4->GetAddress(j, 0).GetAddress();
                 if (m_nodesIp.count(ip_address.str()) == 0)
-                    // m_nodesIp[ip_address.str ()] = "node" + std::to_string (node->GetId ()) +
+                    // m_nodesIp[ip_address.str ()] = "node" + std::to_string (node->GetId ())
+                    // +
                     // "_if" + std::to_string (j);
                     m_nodesIp[ip_address.str()] = nlohmann::json::object(
                         {{"type", "node"},
@@ -519,7 +522,6 @@ Scenario::GetNodesInfo()
             }
         }
     }
-    return nodes_info;
 }
 
 void
@@ -602,14 +604,14 @@ Scenario::operator()()
         // Configure FlowMonitor [create function]
         ns3::FlowMonitorHelper flowmon;
         ns3::Ptr<ns3::FlowMonitor> monitor = flowmon.InstallAll();
-        nlohmann::json nodes_info = this->GetNodesInfo();
+        this->GetNodesInfo();
         Simulator::Schedule(Seconds(CONFIGURATOR->GetTimeSeriesInterval()),
                             &Scenario::MetricsHandler,
                             this,
-                            &nodes_info,
                             &flowmon,
                             &monitor,
-                            Simulator::Now().GetSeconds());
+                            Simulator::Now().GetSeconds(),
+                            true);
 
         Simulator::Run();
         if (CONFIGURATOR->GetLogOnFile())
@@ -622,7 +624,7 @@ Scenario::operator()()
         std::stringstream timeSerieMetrics;
         timeSerieMetrics << CONFIGURATOR->GetResultsPath() << "time-series-metrics.json";
         std::ofstream o(timeSerieMetrics.str());
-        o << std::setw(4) << nodes_info << std::endl;
+        o << std::setw(4) << m_nodesInfo << std::endl;
 
         Simulator::Destroy();
     }
@@ -1555,6 +1557,7 @@ class ScenarioContext
   public:
     std::string status;
     pthread_t t_handler;
+    ns3::Scenario* scenario;
 
     std::string startSimulation(std::string reqBody)
     {
@@ -1602,12 +1605,46 @@ class ScenarioContext
         //           << newPosition.z << "]" << std::endl;
         return "Position changed";
     }
+
+    std::string getRealTimeMetrics()
+    {
+        nlohmann::json results;
+        double time = 0;
+        for (auto& array : scenario->m_nodesInfo["drones-metrics"])
+        {
+            if (array["time"] > time)
+            {
+                time = array["time"];
+            }
+        }
+
+        results["flow-metrics"] = this->getLastMetrics("flow-metrics", time);
+        results["drones-metrics"] = this->getLastMetrics("flow-metrics", time);
+        results["zsps-metrics"] = this->getLastMetrics("flow-metrics", time);
+        results["nodes-metrics"] = this->getLastMetrics("flow-metrics", time);
+        results["remoteNodes-metrics"] = this->getLastMetrics("flow-metrics", time);
+        return results.dump(4);
+    }
+
+    nlohmann::json getLastMetrics(std::string key, double time)
+    {
+        nlohmann::json results = nlohmann::json::array();
+        for (auto& array : scenario->m_nodesInfo[key])
+        {
+            if (array["time"] == time)
+            {
+                results.push_back(array);
+            }
+        }
+        return results;
+    }
 };
 
 void
 ScenarioContext::createScenario(std::string reqBody)
 {
     ns3::Scenario s(reqBody);
+    scenario = &s;
     status = "Running";
     s();
     status = "Ended";
@@ -1620,6 +1657,15 @@ main(int argc, char** argv)
     crow::SimpleApp app;
     ScenarioContext sc;
     bool created = false;
+
+    CROW_ROUTE(app, "/get_realtime_metrics").methods(crow::HTTPMethod::GET)([&]() {
+        if (!created)
+        {
+            return crow::response(400, "Start simulation first!");
+        }
+        std::string results = sc.getRealTimeMetrics();
+        return crow::response(200, results);
+    });
 
     CROW_ROUTE(app, "/simulation").methods(crow::HTTPMethod::POST)([&](const crow::request& req) {
         auto body = crow::json::load(req.body);
