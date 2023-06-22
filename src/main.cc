@@ -1506,46 +1506,14 @@ Scenario::ConfigureSimulator()
 
 } // namespace ns3
 
-void
-ChangeNodeCourse(u_int32_t nodeId,
-                 ns3::Vector acceleration,
-                 ns3::Vector velocity,
-                 double stopTime,
-                 double time)
+int
+same_signal(float newer, float older)
 {
-    auto node = ns3::NodeList::GetNode(nodeId);
-    // auto mobility = node->GetObject<ns3::ConstantVelocityMobilityModel>();
-    auto mobility = node->GetObject<ns3::ConstantAccelerationMobilityModel>();
-    // auto position = mobility->GetPosition();
-
-    velocity.x = velocity.x + acceleration.x * 0.2;
-    velocity.y = velocity.x + acceleration.y * 0.2;
-    velocity.z = velocity.x + acceleration.z * 0.2;
-    // position.x = position.x + velocity.x * 0.2;
-    // position.y = position.y + velocity.y * 0.2;
-    // position.z = position.z + velocity.z * 0.2;
-
-    // mobility->SetPosition(position);
-    // mobility->SetVelocity(velocity);
-    mobility->SetVelocityAndAcceleration(velocity, acceleration);
-    // std::cout << "New location = [" << position.x << "," << position.y << "," << position.z
-    //           << "]. New velocity = [" << velocity.x << "," << velocity.y << "," << velocity.z
-    //           << "]" << std::endl;
-    if (time < stopTime)
-    {
-        ns3::Simulator::Schedule(ns3::Seconds(0.2),
-                                 &ChangeNodeCourse,
-                                 nodeId,
-                                 acceleration,
-                                 velocity,
-                                 stopTime,
-                                 ns3::Simulator::Now().GetSeconds());
-    }
-    else
-    {
-        // mobility->SetVelocity(ns3::Vector(0, 0, 0));
-        mobility->SetVelocityAndAcceleration(ns3::Vector(0, 0, 0), ns3::Vector(0, 0, 0));
-    }
+    if (newer == 0 || older == 0)
+        return 0;
+    if ((newer > 0 && older > 0) || (newer < 0 && older < 0))
+        return 1;
+    return -1;
 }
 
 class ScenarioContext
@@ -1558,6 +1526,11 @@ class ScenarioContext
     std::string status;
     pthread_t t_handler;
     ns3::Scenario* scenario;
+    std::vector<uint32_t> courseNodes;
+
+    void StopNodeCourse(u_int32_t nodeId, ns3::Vector acceleration);
+
+    void ChangeNodeCourse(u_int32_t nodeId, ns3::Vector acceleration, double stopTime, double time);
 
     std::string startSimulation(std::string reqBody)
     {
@@ -1584,25 +1557,30 @@ class ScenarioContext
         nlohmann::json req = nlohmann::json::parse(reqBody);
         std::cout << req.dump() << std::endl;
         uint32_t nodeId = req["drone_id"];
+
+        std::cout << "COURSE NODES: ";
+        for (auto i: this->courseNodes)
+            std::cout << i << ' ';
+        std::cout << std::endl;
+
+
+        if ( std::find(this->courseNodes.begin(), this->courseNodes.end(), nodeId) != this->courseNodes.end() )
+            return "Node is already in course.";
+
         double timeStop = req["time"];
         auto drone = ns3::NodeList::GetNode(nodeId);
         auto acceleration = ns3::Vector(req["acceleration"]["x"],
                                         req["acceleration"]["y"],
                                         req["acceleration"]["z"]);
 
+        this->courseNodes.push_back(nodeId);
         ns3::Simulator::Schedule(ns3::Seconds(0.2),
-                                 &ChangeNodeCourse,
+                                 &ScenarioContext::ChangeNodeCourse,
+                                 this,
                                  nodeId,
                                  acceleration,
-                                 ns3::Vector(0, 0, 0),
                                  ns3::Simulator::Now().GetSeconds() + timeStop,
                                  ns3::Simulator::Now().GetSeconds());
-
-        // auto newPosition =
-        //     ns3::Vector(req["position"]["x"], req["position"]["y"], req["position"]["z"]);
-        // // mobility->SetPosition(newPosition);
-        // std::cout << "New location = [" << newPosition.x << "," << newPosition.y << ","
-        //           << newPosition.z << "]" << std::endl;
         return "Position changed";
     }
 
@@ -1639,6 +1617,89 @@ class ScenarioContext
         return results;
     }
 };
+
+void
+ScenarioContext::StopNodeCourse(u_int32_t nodeId, ns3::Vector acceleration)
+{
+    auto node = ns3::NodeList::GetNode(nodeId);
+    auto mobility = node->GetObject<ns3::ConstantAccelerationMobilityModel>();
+
+    auto velocity = mobility->GetVelocity();
+    auto old_velocity = velocity;
+    velocity.x = velocity.x + acceleration.x * 0.2;
+    velocity.y = velocity.x + acceleration.y * 0.2;
+    velocity.z = velocity.x + acceleration.z * 0.2;
+
+    if (same_signal(velocity.x, old_velocity.x) <= 0)
+    {
+        velocity.x = 0;
+        acceleration.x = 0;
+    }
+    if (same_signal(velocity.y, old_velocity.y) <= 0)
+    {
+        velocity.y = 0;
+        acceleration.y = 0;
+    }
+    if (same_signal(velocity.z, old_velocity.z) <= 0)
+    {
+        velocity.z = 0;
+        acceleration.z = 0;
+    }
+
+    mobility->SetVelocityAndAcceleration(velocity, acceleration);
+
+    if (!(acceleration.x == 0 && acceleration.y == 0 && acceleration.z == 0) &&
+        !(std::find(this->courseNodes.begin(), this->courseNodes.end(), nodeId) !=
+          this->courseNodes.end()))
+    {
+        ns3::Simulator::Schedule(ns3::Seconds(0.2),
+                                 &ScenarioContext::StopNodeCourse,
+                                 this,
+                                 nodeId,
+                                 acceleration);
+    }
+}
+
+void
+ScenarioContext::ChangeNodeCourse(u_int32_t nodeId,
+                                  ns3::Vector acceleration,
+                                  double stopTime,
+                                  double time)
+{
+    auto node = ns3::NodeList::GetNode(nodeId);
+    auto mobility = node->GetObject<ns3::ConstantAccelerationMobilityModel>();
+    auto velocity = mobility->GetVelocity();
+    velocity.x = velocity.x + acceleration.x * 0.2;
+    velocity.y = velocity.x + acceleration.y * 0.2;
+    velocity.z = velocity.x + acceleration.z * 0.2;
+    mobility->SetVelocityAndAcceleration(velocity, acceleration);
+
+    if (time < stopTime)
+    {
+        ns3::Simulator::Schedule(ns3::Seconds(0.2),
+                                 &ScenarioContext::ChangeNodeCourse,
+                                 this,
+                                 nodeId,
+                                 acceleration,
+                                 stopTime,
+                                 ns3::Simulator::Now().GetSeconds());
+    }
+    else
+    {
+        this->courseNodes.erase(
+            std::remove(this->courseNodes.begin(), this->courseNodes.end(), nodeId),
+            this->courseNodes.end());
+
+        acceleration.x *= -1;
+        acceleration.y *= -1;
+        acceleration.z *= -1;
+        ns3::Simulator::Schedule(ns3::Seconds(0.2),
+                                 &ScenarioContext::StopNodeCourse,
+                                 this,
+                                 nodeId,
+                                 acceleration);
+    }
+}
 
 void
 ScenarioContext::createScenario(std::string reqBody)
@@ -1687,8 +1748,7 @@ main(int argc, char** argv)
             if (!body)
                 return crow::response(400, "Invalid body");
 
-            sc.changeCourse(req.body);
-            return crow::response(200, "Position changed");
+            return crow::response(200, sc.changeCourse(req.body));
         });
 
     CROW_ROUTE(app, "/simulation").methods(crow::HTTPMethod::DELETE)([&](const crow::request& req) {
