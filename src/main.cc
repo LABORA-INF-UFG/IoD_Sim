@@ -1527,13 +1527,14 @@ class ScenarioContext
     pthread_t t_handler;
     ns3::Scenario* scenario;
     std::vector<uint32_t> courseNodes;
+    double courseChangeInterval;
 
     void StopNodeCourse(u_int32_t nodeId, ns3::Vector acceleration);
-
     void ChangeNodeCourse(u_int32_t nodeId, ns3::Vector acceleration, double stopTime, double time);
 
     std::string startSimulation(std::string reqBody)
     {
+        this->courseChangeInterval = nlohmann::json::parse(reqBody)["courseChangeInterval"];
         std::thread s_thread(&ScenarioContext::createScenario, this, reqBody);
         t_handler = s_thread.native_handle();
         s_thread.detach();
@@ -1626,9 +1627,9 @@ ScenarioContext::StopNodeCourse(u_int32_t nodeId, ns3::Vector acceleration)
 
     auto velocity = mobility->GetVelocity();
     auto old_velocity = velocity;
-    velocity.x = velocity.x + acceleration.x * 0.2;
-    velocity.y = velocity.x + acceleration.y * 0.2;
-    velocity.z = velocity.x + acceleration.z * 0.2;
+    velocity.x = velocity.x + acceleration.x * this->courseChangeInterval;
+    velocity.y = velocity.x + acceleration.y * this->courseChangeInterval;
+    velocity.z = velocity.x + acceleration.z * this->courseChangeInterval;
 
     if (same_signal(velocity.x, old_velocity.x) <= 0)
     {
@@ -1652,7 +1653,7 @@ ScenarioContext::StopNodeCourse(u_int32_t nodeId, ns3::Vector acceleration)
         !(std::find(this->courseNodes.begin(), this->courseNodes.end(), nodeId) !=
           this->courseNodes.end()))
     {
-        ns3::Simulator::Schedule(ns3::Seconds(0.2),
+        ns3::Simulator::Schedule(ns3::Seconds(this->courseChangeInterval),
                                  &ScenarioContext::StopNodeCourse,
                                  this,
                                  nodeId,
@@ -1669,14 +1670,14 @@ ScenarioContext::ChangeNodeCourse(u_int32_t nodeId,
     auto node = ns3::NodeList::GetNode(nodeId);
     auto mobility = node->GetObject<ns3::ConstantAccelerationMobilityModel>();
     auto velocity = mobility->GetVelocity();
-    velocity.x = velocity.x + acceleration.x * 0.2;
-    velocity.y = velocity.x + acceleration.y * 0.2;
-    velocity.z = velocity.x + acceleration.z * 0.2;
+    velocity.x = velocity.x + acceleration.x * this->courseChangeInterval;
+    velocity.y = velocity.x + acceleration.y * this->courseChangeInterval;
+    velocity.z = velocity.x + acceleration.z * this->courseChangeInterval;
     mobility->SetVelocityAndAcceleration(velocity, acceleration);
 
     if (time < stopTime)
     {
-        ns3::Simulator::Schedule(ns3::Seconds(0.2),
+        ns3::Simulator::Schedule(ns3::Seconds(this->courseChangeInterval),
                                  &ScenarioContext::ChangeNodeCourse,
                                  this,
                                  nodeId,
@@ -1693,7 +1694,7 @@ ScenarioContext::ChangeNodeCourse(u_int32_t nodeId,
         acceleration.x *= -1;
         acceleration.y *= -1;
         acceleration.z *= -1;
-        ns3::Simulator::Schedule(ns3::Seconds(0.2),
+        ns3::Simulator::Schedule(ns3::Seconds(this->courseChangeInterval),
                                  &ScenarioContext::StopNodeCourse,
                                  this,
                                  nodeId,
