@@ -1,0 +1,9 @@
+{
+  "drone_id": 0,
+  "acceleration": {
+    "x": 2.0,
+    "y": 3.0,
+    "z": 0.5
+  },
+  "time": 2
+}
