@@ -1560,12 +1560,12 @@ class ScenarioContext
         uint32_t nodeId = req["drone_id"];
 
         std::cout << "COURSE NODES: ";
-        for (auto i: this->courseNodes)
+        for (auto i : this->courseNodes)
             std::cout << i << ' ';
         std::cout << std::endl;
 
-
-        if ( std::find(this->courseNodes.begin(), this->courseNodes.end(), nodeId) != this->courseNodes.end() )
+        if (std::find(this->courseNodes.begin(), this->courseNodes.end(), nodeId) !=
+            this->courseNodes.end())
             return "Node is already in course.";
 
         double timeStop = req["time"];
@@ -1598,10 +1598,10 @@ class ScenarioContext
         }
 
         results["flow-metrics"] = this->getLastMetrics("flow-metrics", time);
-        results["drones-metrics"] = this->getLastMetrics("flow-metrics", time);
-        results["zsps-metrics"] = this->getLastMetrics("flow-metrics", time);
-        results["nodes-metrics"] = this->getLastMetrics("flow-metrics", time);
-        results["remoteNodes-metrics"] = this->getLastMetrics("flow-metrics", time);
+        results["drones-metrics"] = this->getLastMetrics("drones-metrics", time);
+        results["zsps-metrics"] = this->getLastMetrics("zsps-metrics", time);
+        results["nodes-metrics"] = this->getLastMetrics("nodes-metrics", time);
+        results["remoteNodes-metrics"] = this->getLastMetrics("remoteNodes-metrics", time);
         return results.dump(4);
     }
 
