@@ -1,10 +1,11 @@
 {
-  "name": "lm_elton_demo",
+  "name": "lm_elton_demo_constant_acc",
   "resultsPath": "../results/",
   "logOnFile": true,
   "filteredLog": true,
   "courseChangeInterval": 0.1,
-  "duration": 20,
+  "metricsReportInterval": 0.5,
+  "duration": 120,
   "staticNs3Config": [],
   "world": {
     "size": {
@@ -86,8 +87,8 @@
           {
             "name": "Position",
             "value": [
-              20.0,
-              15.0,
+              1.0,
+              1.0,
               10.0
             ]
           }
@@ -259,8 +260,5 @@
     "NoBackhaulEpcHelper",
     "LteEnbNetDevice",
     "LteUeNetDevice"
-  ],
-  "timeSeriesMetrics": {
-    "reportInterval": 0.5
-  }
+  ]
 }

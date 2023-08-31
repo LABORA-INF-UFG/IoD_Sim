@@ -4,12 +4,15 @@ import time
 import os
 from threading import Thread
 from collections import defaultdict
+import subprocess
 
 working_directory = os.getcwd()
 config_values = {}
 config_values['iod_addr'] = "http://127.0.0.1:18080/"
 config_values['scenario_json'] = f"{working_directory}/scenario/lm_demo_gui.json"
 config_values['change_route_json'] = f"{working_directory}/scenario/lm_elton_demo_change_route.json"
+config_values['flight_plan_json'] = f"{working_directory}/scenario/lm_elton_flight_plan.json"
+location_data = defaultdict(list)
 delay_data = defaultdict(list)
 throughput_data = defaultdict(list)
 jitter_data = defaultdict(list)
@@ -18,6 +21,23 @@ battery_data = defaultdict(list)
 packet_loss_data = defaultdict(list)
 sum_delay = {}
 sub_delay = {}
+
+def start_scenario_visualizer():
+    if working_directory.endswith("IoD_Sim"):
+        return subprocess.Popen(f'python3 {working_directory}/iod_gui/scenario_visualizer.py', shell=True)
+    if working_directory.endswith("ns3"):
+        return subprocess.Popen(f'python3 ../iod_gui/scenario_visualizer.py', shell=True)
+    if working_directory.endswith("iod_gui"):
+        return subprocess.Popen(f'python3 scenario_visualizer.py', shell=True)
+
+
+def start_iodsim():
+    if working_directory.endswith("IoD_Sim"):
+        return subprocess.Popen(f'cd ns3/ && ./ns3 run iodsim', shell=True, stdout=subprocess.PIPE)
+    if working_directory.endswith("ns3"):
+        return subprocess.Popen(f'./ns3 run iodsim', shell=True, stdout=subprocess.PIPE)
+    if working_directory.endswith("iod_gui"):
+        return subprocess.Popen(f'cd ../ns3 && ./ns3 run iodsim', shell=True, stdout=subprocess.PIPE)
 
 
 def call_rest_api(method, address, content=None):
@@ -51,7 +71,7 @@ def format_jitter(jitter):
 
 
 def request_metrics():
-    global delay_data, throughput_data, jitter_data, tx_power_data, battery_data, packet_loss_data, sum_delay
+    global location_data, delay_data, throughput_data, jitter_data, tx_power_data, battery_data, packet_loss_data, sum_delay
     method = 'GET'
     address = 'http://127.0.0.1:18080/get_realtime_metrics'
     result = call_rest_api(method, address)
@@ -65,6 +85,7 @@ def request_metrics():
             id_value = data.get('node-id')
             time_value = data.get('time')
             network = data.get('network', {})
+            location_value = data.get('location')
             if id_value is not None and time_value is not None and network:
                 if not id_value in sum_delay:
                     sum_delay[id_value] = 0
@@ -90,6 +111,8 @@ def request_metrics():
                     (time_value, round(network.get('txPower'), 2)))
                 battery_data[id_value].append(
                     (time_value, data.get('battery')))
+                location_data[id_value].append(
+                    (time_value, location_value))
 
         result = call_rest_api(method, address)
 
@@ -98,6 +121,6 @@ request_metrics_thread = Thread(target=request_metrics)
 
 if __name__ == '__main__':
     # print(call_rest_api('GET', 'http://127.0.0.1:18080/get_realtime_metrics').text)
-    request_metrics_thread = Thread(target=request_metrics)
-    request_metrics_thread.start()
-    request_metrics_thread.join()
+    # request_metrics_thread.start()
+    # request_metrics_thread.join()
+    start_scenario_visualizer()

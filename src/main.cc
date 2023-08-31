@@ -81,6 +81,8 @@
 
 class ScenarioContext;
 
+nlohmann::json whatif_results;
+
 namespace ns3
 {
 constexpr int N_LAYERS = 4;
@@ -625,6 +627,26 @@ Scenario::operator()()
         timeSerieMetrics << CONFIGURATOR->GetResultsPath() << "time-series-metrics.json";
         std::ofstream o(timeSerieMetrics.str());
         o << std::setw(4) << m_nodesInfo << std::endl;
+
+        // CMU
+        double time = 0;
+        for (auto& array : this->m_nodesInfo["drones-metrics"])
+        {
+            if (array["time"] > time)
+            {
+                whatif_results = array;
+            }
+        }
+
+        // for (auto& array : this->m_nodesInfo["drones-metrics"])
+        // {
+        //     if (array["time"] == time)
+        //     {
+        //         results.push_back(array);
+        //     }
+        // }
+
+        std::cout << whatif_results << std::endl;
 
         Simulator::Destroy();
     }
@@ -1541,6 +1563,17 @@ class ScenarioContext
         return "Simulation Started.";
     }
 
+    std::string whatIf(std::string reqBody)
+    {
+        this->courseChangeInterval = nlohmann::json::parse(reqBody)["courseChangeInterval"];
+        ns3::Scenario s(reqBody);
+        scenario = &s;
+        status = "Running";
+        s();
+        status = "Ended";
+        return "Simulation Done.";
+    }
+
     std::string stopSimulation()
     {
         if (status != "Running")
@@ -1741,6 +1774,18 @@ main(int argc, char** argv)
         return crow::response(200, "Simulation started");
     });
 
+    CROW_ROUTE(app, "/whatif").methods(crow::HTTPMethod::POST)([&](const crow::request& req) {
+        auto body = crow::json::load(req.body);
+        if (created)
+            return crow::response(400, "Simulation is already running");
+        if (!body)
+            return crow::response(400, "Invalid body");
+        created = true;
+
+        sc.whatIf(req.body);
+        return crow::response(200, whatif_results.dump(4));
+    });
+
     CROW_ROUTE(app, "/change_position")
         .methods(crow::HTTPMethod::POST)([&](const crow::request& req) {
             auto body = crow::json::load(req.body);
@@ -1757,6 +1802,11 @@ main(int argc, char** argv)
 
         sc.stopSimulation();
         return crow::response(200, "Simulation stopped");
+    });
+
+    CROW_ROUTE(app, "/kill").methods(crow::HTTPMethod::DELETE)([&](const crow::request& req) {
+        exit(EXIT_SUCCESS);
+        return crow::response(200, "killed");
     });
 
     app.port(18080).multithreaded().run();

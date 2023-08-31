@@ -1,4 +1,4 @@
-from gui import *
+from iod_gui.gui_old import *
 from controller import *
 
 if __name__ == '__main__':
