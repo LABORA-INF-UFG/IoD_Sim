@@ -6,15 +6,20 @@ matplotlib.use('TkAgg')
 colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:gray',
           'tab:brown', 'tab:pink', 'tab:purple', 'tab:olive', 'tab:cyan']
 
+lines = ['dashed', 'dotted', 'dashdot', (0, (3, 5, 1, 5)), (0, (5, 1)), (0, (3, 1, 1, 1)), (0, (3, 1, 1, 1, 1, 1))]
+
 class Figure():
   def __init__(self, name):
     self.name = name
+    self.base_station = False
     if name == "Flight Path":
+      plt.rcParams.update({'font.size': 10})
       self.fig = plt.figure(figsize=(12, 8))
       self.ax = self.fig.add_subplot(111, projection='3d')
       self._format_flight_path()
 
     elif name == "Metrics":
+      plt.rcParams.update({'font.size': 12})
       self.fig, self.ax = plt.subplots(3, 2, figsize=(12, 8), sharex='col')
       self._format_metrics
     else:
@@ -22,6 +27,8 @@ class Figure():
 
   def _update_flight_path(self):
     self.ax.cla()
+    if not self.base_station:
+        self.ax.scatter(5, 5, 1, marker='^', s=100, color='black', label='Base Station')
     i = 1
     for id_value, location_points in location_data.items():
       time_values, location_values = zip(*location_points)
@@ -29,11 +36,14 @@ class Figure():
       x = [d['x'] for d in location_values[:-1]]
       y = [d['y'] for d in location_values[:-1]]
       z = [d['z'] for d in location_values[:-1]]
-      self.ax.plot(x, y, z, '--', linestyle='dashed', label=f'ID {id_value}', color=colors[id_value])
+      self.ax.plot(x, y, z, '--', linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
       self.ax.plot(location_values[-1]['x'], location_values[-1]['y'], location_values[-1]['z'], 'o-',
-                   linestyle='dashed', label=None, color=colors[id_value])
+                   linestyle=lines[id_value], label=None, color=colors[id_value])
 
       i+=1
+    self.ax.set_xlabel("x (m)")
+    self.ax.set_ylabel("y (m)")
+    self.ax.set_zlabel("z (m)")
 
     self._format_flight_path()
 
@@ -49,42 +59,42 @@ class Figure():
     for id_value, delay_points in delay_data.items():
         time_values, delay_values = zip(*delay_points)
         self.ax[0, 0].plot(time_values, delay_values, line,
-                           linestyle='dashed', label=f'ID {id_value}', color=colors[id_value])
+                           linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
 
     for id_value, throughput_points in throughput_data.items():
         time_values, throughput_values = zip(*throughput_points)
         self.ax[0, 1].plot(time_values, throughput_values, line,
-                           linestyle='dashed', label=f'ID {id_value}', color=colors[id_value])
+                           linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
 
     for id_value, jitter_points in jitter_data.items():
         time_values, jitter_values = zip(*jitter_points)
         self.ax[1, 0].plot(time_values, jitter_values, line,
-                           linestyle='dashed', label=f'ID {id_value}', color=colors[id_value])
+                           linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
 
     for id_value, tx_power_points in tx_power_data.items():
         time_values, tx_power_values = zip(*tx_power_points)
         self.ax[1, 1].plot(time_values, tx_power_values, line,
-                           linestyle='dashed', label=f'ID {id_value}', color=colors[id_value])
+                           linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
 
     for id_value, battery_points in battery_data.items():
         time_values, battery_values = zip(*battery_points)
         self.ax[2, 0].plot(time_values, battery_values, line,
-                           linestyle='dashed', label=f'ID {id_value}', color=colors[id_value])
+                           linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
 
     for id_value, packet_loss_points in packet_loss_data.items():
         time_values, packet_loss_values = zip(*packet_loss_points)
         self.ax[2, 1].plot(time_values, packet_loss_values, line,
-                           linestyle='dashed', label=f'ID {id_value}', color=colors[id_value])
+                           linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
 
     self._format_metrics()
 
   def _format_flight_path(self):
-    self.ax.set_xlabel('X')
-    self.ax.set_ylabel('Y')
-    self.ax.set_zlabel('Z')
+    self.ax.set_xlabel('X (m)')
+    self.ax.set_ylabel('Y (m)')
+    self.ax.set_zlabel('Z (m)')
     self.ax.legend()
     self.ax.grid(True)
-    plt.title("Drone's Flight Path")
+    # plt.title("Drone's Flight Path")
 
   def _format_metrics(self):
     for i in range(0, 3):
@@ -99,7 +109,7 @@ class Figure():
     self.ax[2, 1].set_ylabel('Packet loss (%)')
     self.ax[2, 0].set_xlabel('Time (s)')
     self.ax[2, 1].set_xlabel('Time (s)')
-    self.fig.suptitle("Scenario Metrics")
+    # self.fig.suptitle("Scenario Metrics")
 
 
   def update(self):

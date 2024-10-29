@@ -1,0 +1,378 @@
+{
+  "name": "lm_elton_s2",
+  "resultsPath": "../results/",
+  "logOnFile": true,
+  "filteredLog": false,
+  "courseChangeInterval": 0.1,
+  "duration": 60,
+  "staticNs3Config": [
+    {
+      "name": "ns3::WifiRemoteStationManager::FragmentationThreshold",
+      "value": "2200"
+    },
+    {
+      "name": "ns3::WifiRemoteStationManager::RtsCtsThreshold",
+      "value": "2200"
+    },
+    {
+      "name": "ns3::WifiRemoteStationManager::NonUnicastMode",
+      "value": "DsssRate1Mbps"
+    }
+  ],
+  "world": {
+    "size": {
+      "X": "1000",
+      "Y": "1000",
+      "Z": "100"
+    },
+    "buildings": []
+  },
+  "phyLayer": [
+    {
+      "type": "wifi",
+      "standard": "802.11n-2.4GHz",
+      "attributes": [
+        {
+          "name": "RxGain",
+          "value": 0.0
+        }
+      ],
+      "channel": {
+        "propagationDelayModel": {
+          "name": "ns3::ConstantSpeedPropagationDelayModel",
+          "attributes": []
+        },
+        "propagationLossModel": {
+          "name": "ns3::FriisPropagationLossModel",
+          "attributes": [
+            {
+              "name": "Frequency",
+              "value": 2.4e9
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "macLayer": [
+    {
+      "type": "wifi",
+      "ssid": "wifi-default",
+      "remoteStationManager": {
+        "name": "ns3::ConstantRateWifiManager",
+        "attributes": [
+          {
+            "name": "DataMode",
+            "value": "DsssRate1Mbps"
+          },
+          {
+            "name": "ControlMode",
+            "value": "DsssRate1Mbps"
+          }
+        ]
+      }
+    }
+  ],
+  "networkLayer": [
+    {
+      "type": "ipv4",
+      "address": "10.1.0.0",
+      "mask": "255.255.255.0",
+      "gateway": "10.1.0.1"
+    }
+  ],
+  "drones": [
+    {
+      "netDevices": [
+        {
+          "type": "wifi",
+          "networkLayer": 0,
+          "macLayer": {
+            "name": "ns3::StaWifiMac",
+            "attributes": [
+              {
+                "name": "Ssid",
+                "value": "wifi-default"
+              }
+            ]
+          }
+        }
+      ],
+      "mobilityModel": {
+        "name": "ns3::ParametricSpeedDroneMobilityModel",
+        "attributes": [
+          {
+            "name": "SpeedCoefficients",
+            "value": [
+              1.0,
+              0.0
+            ]
+          },
+          {
+            "name": "FlightPlan",
+            "value": [
+              {
+                "position": [
+                  2.0,
+                  1.0,
+                  0.1
+                ],
+                "interest": 0,
+                "restTime": 1.0
+              },
+              {
+                "position": [
+                  8.5,
+                  5.1,
+                  5.3
+                ],
+                "interest": 0,
+                "restTime": 1.0
+              },
+              {
+                "position": [
+                  5.2,
+                  7.2,
+                  5.5
+                ],
+                "interest": 0,
+                "restTime": 1.0
+              },
+              {
+                "position": [
+                  5.9,
+                  9.3,
+                  5.5
+                ],
+                "interest": 0,
+                "restTime": 1.0
+              },
+              {
+                "position": [
+                  4.9,
+                  8.2,
+                  5.1
+                ],
+                "interest": 0,
+                "restTime": 1.0
+              },
+              {
+                "position": [
+                  3.0,
+                  6.5,
+                  5.5
+                ],
+                "interest": 0,
+                "restTime": 1.0
+              },
+              {
+                "position": [
+                  3.4,
+                  3.8,
+                  5.6
+                ],
+                "interest": 0,
+                "restTime": 1.0
+              },
+              {
+                "position": [
+                  3.9,
+                  2.1,
+                  5.2
+                ],
+                "interest": 0,
+                "restTime": 1.0
+              },
+              {
+                "position": [
+                  7.1,
+                  3.9,
+                  5.7
+                ],
+                "interest": 0,
+                "restTime": 1.0
+              },
+              {
+                "position": [
+                  7.0,
+                  8.0,
+                  0.1
+                ],
+                "interest": 0,
+                "restTime": 1.0
+              }
+            ]
+          },
+          {
+            "name": "CurveStep",
+            "value": 0.001
+          }
+        ]
+      },
+      "applications": [
+        {
+          "name": "ns3::DroneClientApplication",
+          "attributes": [
+            {
+              "name": "StartTime",
+              "value": 1.0
+            },
+            {
+              "name": "StopTime",
+              "value": 299.0
+            },
+            {
+              "name": "DestinationIpv4Address",
+              "value": "200.0.0.1"
+            },
+            {
+              "name": "TransmissionInterval",
+              "value": 0.05
+            }
+          ]
+        }
+      ],
+      "mechanics": {
+        "name": "ns3::Drone",
+        "attributes": [
+          {
+            "name": "Mass",
+            "value": 0.750
+          },
+          {
+            "name": "RotorDiskArea",
+            "value": 0.18
+          },
+          {
+            "name": "DragCoefficient",
+            "value": 0.08
+          }
+        ]
+      },
+      "battery": {
+        "name": "ns3::LiIonEnergySource",
+        "attributes": [
+          {
+            "name": "LiIonEnergySourceInitialEnergyJ",
+            "value": 2500.0
+          },
+          {
+            "name": "LiIonEnergyLowBatteryThreshold",
+            "value": 0.2
+          }
+        ]
+      },
+      "peripherals": [
+        {
+          "name": "ns3::DronePeripheral",
+          "attributes": [
+            {
+              "name": "PowerConsumption",
+              "value": [
+                0,
+                1.0,
+                3.3
+              ]
+            }
+          ]
+        },
+        {
+          "name": "ns3::StoragePeripheral",
+          "attributes": [
+            {
+              "name": "PowerConsumption",
+              "value": [
+                0,
+                1.0,
+                3.3
+              ]
+            },
+            {
+              "name": "Capacity",
+              "value": 8000000
+            }
+          ]
+        },
+        {
+          "name": "ns3::InputPeripheral",
+          "attributes": [
+            {
+              "name": "PowerConsumption",
+              "value": [
+                0,
+                1.0,
+                3.3
+              ]
+            },
+            {
+              "name": "DataRate",
+              "value": 2000000.0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "ZSPs": [
+    {
+      "netDevices": [
+        {
+          "type": "wifi",
+          "macLayer": {
+            "name": "ns3::ApWifiMac",
+            "attributes": [
+              {
+                "name": "Ssid",
+                "value": "wifi-default"
+              }
+            ]
+          },
+          "networkLayer": 0
+        }
+      ],
+      "mobilityModel": {
+        "name": "ns3::ConstantPositionMobilityModel",
+        "attributes": [
+          {
+            "name": "Position",
+            "value": [
+              6.0,
+              5.0,
+              8.0
+            ]
+          }
+        ]
+      },
+      "applications": []
+    }
+  ],
+  "remotes": [
+    {
+      "networkLayer": 0,
+      "applications": [
+        {
+          "name": "ns3::DroneServerApplication",
+          "attributes": []
+        }
+      ]
+    }
+  ],
+  "analytics": [
+    {
+      "type": "lteRadioEnvironmentMap",
+      "ChannelPath": "/ChannelList/2"
+    }
+  ],
+  "logComponents": [
+    "DroneServerApplication",
+    "DroneClientApplication",
+    "Drone",
+    "Scenario",
+    "LteHelper",
+    "NoBackhaulEpcHelper",
+    "LteEnbNetDevice"
+  ],
+  "timeSeriesMetrics": {
+    "reportInterval": 0.5
+  }
+}

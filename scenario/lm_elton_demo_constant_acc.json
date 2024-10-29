@@ -260,5 +260,8 @@
     "NoBackhaulEpcHelper",
     "LteEnbNetDevice",
     "LteUeNetDevice"
-  ]
+  ],
+  "timeSeriesMetrics": {
+  "reportInterval": 0.5
+}
 }

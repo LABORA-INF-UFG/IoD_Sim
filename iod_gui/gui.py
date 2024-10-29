@@ -105,7 +105,7 @@ def main_window():
                     'DELETE', f"{config_values['iod_addr']}{'simulation'}")
                 if result == None:
                     sg.popup(
-                        f"REST Server already stopped.", title='Error')
+                        f"Simulation stopped.", title='Error')
                 elif result.status_code == 200:
                     result = call_rest_api(
                         'DELETE', f"{config_values['iod_addr']}{'kill'}")

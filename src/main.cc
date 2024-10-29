@@ -240,8 +240,7 @@ Scenario::MetricsHandler(ns3::FlowMonitorHelper* flowmon,
         sentPck << iter->second.txPackets;
         recvPck << iter->second.rxPackets;
         lostPck << iter->second.txPackets - iter->second.rxPackets;
-        pckDelRatio << (iter->second.txPackets - iter->second.rxPackets) * 100 /
-                           iter->second.txPackets;
+        pckDelRatio << (iter->second.rxPackets * 100) / iter->second.txPackets;
         delay << iter->second.delaySum;
         jitter << iter->second.jitterSum;
         thrgKbps << iter->second.rxBytes * 8.0 /

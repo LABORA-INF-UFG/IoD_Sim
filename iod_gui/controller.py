@@ -21,6 +21,8 @@ battery_data = defaultdict(list)
 packet_loss_data = defaultdict(list)
 sum_delay = {}
 sub_delay = {}
+sum_sendp = {}
+sum_lostp = {}
 
 def start_scenario_visualizer():
     if working_directory.endswith("IoD_Sim"):
@@ -71,7 +73,7 @@ def format_jitter(jitter):
 
 
 def request_metrics():
-    global location_data, delay_data, throughput_data, jitter_data, tx_power_data, battery_data, packet_loss_data, sum_delay
+    global location_data, delay_data, throughput_data, jitter_data, tx_power_data, battery_data, packet_loss_data, sum_delay, sum_sendp, sum_lostp
     method = 'GET'
     address = 'http://127.0.0.1:18080/get_realtime_metrics'
     result = call_rest_api(method, address)
@@ -90,6 +92,9 @@ def request_metrics():
                 if not id_value in sum_delay:
                     sum_delay[id_value] = 0
                     sub_delay[id_value] = 0
+                    sum_sendp[id_value] = 0
+                    sum_lostp[id_value] = 0
+
                 # print(f"old delay: {r_delay} \t| \tnew delay: {delay} \t| \tresult: {round(float(format_delay(network.get('delay')) - delay))}")
                 delay_value = round(float(format_delay(network.get('delay'))))
                 if (delay_value > sum_delay[id_value]):
@@ -99,12 +104,23 @@ def request_metrics():
                     float(network.get('throughput-kbps')), 2)
                 sentp = round(float(network.get('sent-pck')), 2)
                 lostp = round(float(network.get('lost-pck')), 2)
+                if (sentp > sum_sendp[id_value]):
+                    sub = sentp - sum_sendp[id_value]
+                    sum_sendp[id_value] = sentp
+                    sentp = sub
+                if (lostp > sum_lostp[id_value]):
+                    sub = lostp - sum_lostp[id_value]
+                    sum_lostp[id_value] = lostp
+                    lostp = sub
+                if (lostp == sum_lostp[id_value]):
+                    lostp = 0
+
 
                 delay_data[id_value].append((time_value, sub_delay[id_value]))
                 throughput_data[id_value].append(
                     (time_value, throughput_value))
                 packet_loss_data[id_value].append(
-                    (time_value, round(lostp/(sentp + lostp), 2)*100))
+                    (time_value, round(lostp/(sentp), 2)*100))
                 jitter_data[id_value].append(
                     (time_value, format_jitter(network.get('jitter'))))
                 tx_power_data[id_value].append(

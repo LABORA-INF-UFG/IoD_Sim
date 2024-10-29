@@ -1,11 +1,7 @@
-// Demo of an IRS split in half to serve two ground nodes
 {
+  "name": "irs_paper_s1",
   "filteredLog": false,
   "courseChangeInterval": 0.1,
-  "timeSeriesMetrics": {
-    "reportInterval": 0.5
-  },
-  "name": "irs_demo1",
   "resultsPath": "../results/",
   "logOnFile": true,
   "duration": 10,
@@ -13,22 +9,22 @@
   "staticNs3Config": [],
   "world": {
     "size": {
-      "X": "1000",
-      "Y": "1000",
-      "Z": "200"
+      "X": "400",
+      "Y": "400",
+      "Z": "100"
     },
     "buildings": [
       {
         "type": "residential",
         "walls": "concreteWithoutWindows",
         "boundaries": [
-          495.0,
-          505.0,
-          495.0,
-          505.0,
+          190.0,
+          210.0,
+          190.0,
+          210.0,
           0.0,
-          30.0
-        ], //p1x, p2x, p1y, p2y, p1z, p2z
+          25.0
+        ],
         "floors": 13,
         "rooms": [
           10,
@@ -44,7 +40,28 @@
       "channel": {
         "spectrumModel": {
           "name": "ns3::IrsAssistedSpectrumChannel",
-          "attributes": []
+          "attributes": [
+            {
+              "name": "KMin",
+              "value": 6.0
+            },
+            {
+              "name": "KMax",
+              "value": 10.0
+            },
+            {
+              "name": "AlphaLoss",
+              "value": 3.0
+            },
+            {
+              "name": "KNlos",
+              "value": 0.0
+            },
+            {
+              "name": "NoDirectLink",
+              "value": true
+            }
+          ]
         }
       }
     }
@@ -74,23 +91,23 @@
               "type": "GBR_CONV_VIDEO",
               "bitrate": {
                 "guaranteed": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 20000000.0,
+                  "uplink": 5000000.0
                 },
                 "maximum": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 20000000.0,
+                  "uplink": 5000000.0
                 }
               }
             }
           ],
-          "phy": {
-            "TxPower": 24.0,
-            "EnableUplinkPowerControl": "false"
-          },
           "antennaModel": {
             "name": "ns3::IsotropicAntennaModel",
             "attributes": []
+          },
+          "phy": {
+            "TxPower": 24.0,
+            "EnableUplinkPowerControl": false
           }
         }
       ],
@@ -100,77 +117,9 @@
           {
             "name": "Position",
             "value": [
-              560.0,
-              530.0,
-              5.0
-            ]
-          }
-        ]
-      },
-      "applications": [
-        {
-          "name": "ns3::UdpEchoClientApplication",
-          "attributes": [
-            {
-              "name": "StartTime",
-              "value": 1.0
-            },
-            {
-              "name": "StopTime",
-              "value": 499.0
-            },
-            {
-              "name": "RemoteAddress",
-              "value": "200.0.0.1"
-            },
-            {
-              "name": "Interval",
-              "value": 0.1
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "netDevices": [
-        {
-          "type": "lte",
-          "networkLayer": 0,
-          "role": "UE",
-          "bearers": [
-            {
-              "type": "GBR_CONV_VIDEO",
-              "bitrate": {
-                "guaranteed": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
-                },
-                "maximum": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
-                }
-              }
-            }
-          ],
-          "phy": {
-            "TxPower": 24.0,
-            "EnableUplinkPowerControl": "false"
-          },
-          "antennaModel": {
-            "name": "ns3::IsotropicAntennaModel",
-            "attributes": []
-          }
-        }
-      ],
-      "mobilityModel": {
-        "name": "ns3::ConstantPositionMobilityModel",
-        "attributes": [
-          {
-            "name": "Position",
-            "value": [
-              560.0,
-              470.0,
-              5.0
+              300.0,
+              200.0,
+              0.0
             ]
           }
         ]
@@ -208,9 +157,9 @@
           {
             "name": "Position",
             "value": [
-              500.0,
-              500.0,
-              60.0
+              200.0,
+              200.0,
+              50.0
             ]
           }
         ]
@@ -221,7 +170,7 @@
         "attributes": [
           {
             "name": "Mass",
-            "value": 0.750
+            "value": 0.75
           },
           {
             "name": "RotorDiskArea",
@@ -248,9 +197,6 @@
       },
       "peripherals": [
         {
-          //Test 1
-          //PatchConfigurator: NO
-          //ServingConfigurator: NO
           "name": "ns3::Irs",
           "attributes": [
             {
@@ -287,26 +233,10 @@
                 {
                   "Size": [
                     0,
-                    69,
-                    0,
-                    99
-                  ],
-                  "PhaseX": 0.0,
-                  "PhaseY": 0.0,
-                  "ServingNodes": [
-                    "/NodeList/1",
-                    "/ZspList/0"
-                  ]
-                },
-                {
-                  "Size": [
-                    70,
                     99,
                     0,
                     99
                   ],
-                  "PhaseX": 0.0,
-                  "PhaseY": 0.0,
                   "ServingNodes": [
                     "/NodeList/0",
                     "/ZspList/0"
@@ -339,22 +269,22 @@
               "type": "GBR_CONV_VIDEO",
               "bitrate": {
                 "guaranteed": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 20000000.0,
+                  "uplink": 5000000.0
                 },
                 "maximum": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 20000000.0,
+                  "uplink": 5000000.0
                 }
               }
             }
           ],
-          "phy": {
-            "TxPower": 49.0
-          },
           "antennaModel": {
             "name": "ns3::IsotropicAntennaModel",
             "attributes": []
+          },
+          "phy": {
+            "TxPower": 49.0
           }
         }
       ],
@@ -364,9 +294,9 @@
           {
             "name": "Position",
             "value": [
-              440.0,
-              500.0,
-              5.0
+              100.0,
+              200.0,
+              30.0
             ]
           }
         ]
@@ -380,10 +310,41 @@
       "applications": [
         {
           "name": "ns3::DroneServerApplication",
-          "attributes": []
+          "attributes": [
+            {
+              "name": "StartTime",
+              "value": 1.0
+            },
+            {
+              "name": "StopTime",
+              "value": 499.0
+            },
+            {
+              "name": "Port",
+              "value": 1337
+            }
+          ]
         }
       ]
     }
+  ],
+  "radioMapParameters": [
+    "XMin",
+    "0",
+    "XMax",
+    "400",
+    "XRes",
+    "800",
+    "YMin",
+    "0",
+    "YMax",
+    "400",
+    "YRes",
+    "800",
+    "Z",
+    "0",
+    "ChannelPath",
+    "/ChannelList/2"
   ],
   "logComponents": [
     "DroneServerApplication",
@@ -393,5 +354,8 @@
     "LteHelper",
     "NoBackhaulEpcHelper",
     "LteEnbNetDevice"
-  ]
+  ],
+"timeSeriesMetrics": {
+  "reportInterval": 0.5
+}
 }

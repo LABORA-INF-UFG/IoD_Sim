@@ -68,12 +68,12 @@
               "type": "GBR_CONV_VIDEO",
               "bitrate": {
                 "guaranteed": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 30e6,
+                  "uplink": 15e6
                 },
                 "maximum": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 60e6,
+                  "uplink": 30e6
                 }
               }
             }
@@ -341,12 +341,12 @@
               "type": "GBR_CONV_VIDEO",
               "bitrate": {
                 "guaranteed": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 30e6,
+                  "uplink": 15e6
                 },
                 "maximum": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 60e6,
+                  "uplink": 30e6
                 }
               }
             }
@@ -614,12 +614,12 @@
               "type": "GBR_CONV_VIDEO",
               "bitrate": {
                 "guaranteed": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 30e6,
+                  "uplink": 15e6
                 },
                 "maximum": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 60e6,
+                  "uplink": 30e6
                 }
               }
             }
@@ -887,12 +887,12 @@
               "type": "GBR_CONV_VIDEO",
               "bitrate": {
                 "guaranteed": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 30e6,
+                  "uplink": 15e6
                 },
                 "maximum": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 60e6,
+                  "uplink": 30e6
                 }
               }
             }
@@ -1160,12 +1160,12 @@
               "type": "GBR_CONV_VIDEO",
               "bitrate": {
                 "guaranteed": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 30e6,
+                  "uplink": 15e6
                 },
                 "maximum": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 60e6,
+                  "uplink": 30e6
                 }
               }
             }
@@ -1433,12 +1433,12 @@
               "type": "GBR_CONV_VIDEO",
               "bitrate": {
                 "guaranteed": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 30e6,
+                  "uplink": 15e6
                 },
                 "maximum": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 60e6,
+                  "uplink": 30e6
                 }
               }
             }
@@ -1708,16 +1708,19 @@
               "type": "GBR_CONV_VIDEO",
               "bitrate": {
                 "guaranteed": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 30e6,
+                  "uplink": 10e6
                 },
                 "maximum": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 50e6,
+                  "uplink": 20e6
                 }
               }
             }
-          ]
+          ],
+          "phy": {
+            "TxPower": 49.0
+          }
         }
       ],
       "mobilityModel": {
