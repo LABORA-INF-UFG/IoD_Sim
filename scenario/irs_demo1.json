@@ -1,4 +1,3 @@
-// Demo of an IRS split in half to serve two ground nodes
 {
   "filteredLog": false,
   "courseChangeInterval": 0.1,
@@ -28,7 +27,7 @@
           505.0,
           0.0,
           30.0
-        ], //p1x, p2x, p1y, p2y, p1z, p2z
+        ],
         "floors": 13,
         "rooms": [
           10,
@@ -248,9 +247,6 @@
       },
       "peripherals": [
         {
-          //Test 1
-          //PatchConfigurator: NO
-          //ServingConfigurator: NO
           "name": "ns3::Irs",
           "attributes": [
             {

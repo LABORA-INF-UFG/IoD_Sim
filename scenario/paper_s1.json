@@ -1,6 +1,11 @@
 // This scenario is presented in https://arxiv.org/abs/2203.13710
 {
     "name": "paper_s1",
+    "filteredLog": false,
+    "courseChangeInterval": 0.1,
+    "timeSeriesMetrics": {
+        "reportInterval": 0.5
+    },
     "resultsPath": "../results/",
     "logOnFile": true,
     "duration": 51,
@@ -86,7 +91,8 @@
         }
     ],
 
-    "drones": [{
+    "drones": [
+        {
             "netDevices": [
                 {
                     "type": "wifi",

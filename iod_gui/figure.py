@@ -1,4 +1,4 @@
-from controller import delay_data, throughput_data, jitter_data, tx_power_data, battery_data, packet_loss_data, location_data
+from controller import delay_data, throughput_data, jitter_data, tx_power_data, battery_data, packet_loss_data, location_data, zsp_location_data
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('TkAgg')
@@ -27,11 +27,15 @@ class Figure():
 
   def _update_flight_path(self):
     self.ax.cla()
-    if not self.base_station:
-        self.ax.scatter(5, 5, 1, marker='^', s=100, color='black', label='Base Station')
+    for _, zsp_location_points in zsp_location_data.items():
+        _, zsp_location_values = zip(*zsp_location_points)
+        self.ax.scatter(zsp_location_values[-1]['x'], \
+                        zsp_location_values[-1]['y'], \
+                        zsp_location_values[-1]['z'], \
+                        marker='^', s=100, color='black', label='Base Station')
     i = 1
     for id_value, location_points in location_data.items():
-      time_values, location_values = zip(*location_points)
+      _, location_values = zip(*location_points)
 
       x = [d['x'] for d in location_values[:-1]]
       y = [d['y'] for d in location_values[:-1]]

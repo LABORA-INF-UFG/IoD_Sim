@@ -84,7 +84,7 @@ def main_window():
                 if result == None:
                     iodsim_process = start_iodsim()
                     tries = 0
-                    while tries < 2 and not result:
+                    while tries < 4 and not result:
                         time.sleep(1)
                         result = call_rest_api(
                             'POST', f"{config_values['iod_addr']}{'simulation'}", content=values['-SCENARIO_CONFIGURATION-'])

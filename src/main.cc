@@ -1640,6 +1640,11 @@ class ScenarioContext
     nlohmann::json getLastMetrics(std::string key, double time)
     {
         nlohmann::json results = nlohmann::json::array();
+        if (key == "zsps-metrics" && !scenario->m_nodesInfo[key].empty())
+        {
+            results.push_back(scenario->m_nodesInfo[key].back());
+        }
+
         for (auto& array : scenario->m_nodesInfo[key])
         {
             if (array["time"] == time)
@@ -1647,6 +1652,7 @@ class ScenarioContext
                 results.push_back(array);
             }
         }
+
         return results;
     }
 };

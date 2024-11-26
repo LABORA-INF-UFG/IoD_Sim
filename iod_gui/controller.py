@@ -13,6 +13,7 @@ config_values['scenario_json'] = f"{working_directory}/scenario/lm_demo_gui.json
 config_values['change_route_json'] = f"{working_directory}/scenario/lm_elton_demo_change_route.json"
 config_values['flight_plan_json'] = f"{working_directory}/scenario/lm_elton_flight_plan.json"
 location_data = defaultdict(list)
+zsp_location_data = defaultdict(list)
 delay_data = defaultdict(list)
 throughput_data = defaultdict(list)
 jitter_data = defaultdict(list)
@@ -73,7 +74,7 @@ def format_jitter(jitter):
 
 
 def request_metrics():
-    global location_data, delay_data, throughput_data, jitter_data, tx_power_data, battery_data, packet_loss_data, sum_delay, sum_sendp, sum_lostp
+    global location_data, zsp_location_data, delay_data, throughput_data, jitter_data, tx_power_data, battery_data, packet_loss_data, sum_delay, sum_sendp, sum_lostp
     method = 'GET'
     address = 'http://127.0.0.1:18080/get_realtime_metrics'
     result = call_rest_api(method, address)
@@ -83,6 +84,16 @@ def request_metrics():
             break
         time.sleep(0.5)
         new_data = json.loads(result.text)
+
+        for data in new_data['zsps-metrics']:
+            id_value = data.get('id')
+            time_value = data.get('time')
+            zsp_location_value = data.get('location')
+            zsp_location_data[id_value].append(
+                    (time_value, zsp_location_value))
+
+
+
         for data in new_data['drones-metrics']:
             id_value = data.get('node-id')
             time_value = data.get('time')
