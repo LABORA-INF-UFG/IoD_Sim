@@ -37,6 +37,9 @@ class Figure():
     for id_value, location_points in location_data.items():
       _, location_values = zip(*location_points)
 
+
+      id_value = id_value % len(colors)
+
       x = [d['x'] for d in location_values[:-1]]
       y = [d['y'] for d in location_values[:-1]]
       z = [d['z'] for d in location_values[:-1]]
@@ -62,31 +65,37 @@ class Figure():
     line = '--'
     for id_value, delay_points in delay_data.items():
         time_values, delay_values = zip(*delay_points)
+        id_value = id_value % len(colors)
         self.ax[0, 0].plot(time_values, delay_values, line,
                            linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
 
     for id_value, throughput_points in throughput_data.items():
         time_values, throughput_values = zip(*throughput_points)
+        id_value = id_value % len(colors)
         self.ax[0, 1].plot(time_values, throughput_values, line,
                            linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
 
     for id_value, jitter_points in jitter_data.items():
         time_values, jitter_values = zip(*jitter_points)
+        id_value = id_value % len(colors)
         self.ax[1, 0].plot(time_values, jitter_values, line,
                            linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
 
     for id_value, tx_power_points in tx_power_data.items():
         time_values, tx_power_values = zip(*tx_power_points)
+        id_value = id_value % len(colors)
         self.ax[1, 1].plot(time_values, tx_power_values, line,
                            linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
 
     for id_value, battery_points in battery_data.items():
         time_values, battery_values = zip(*battery_points)
+        id_value = id_value % len(colors)
         self.ax[2, 0].plot(time_values, battery_values, line,
                            linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
 
     for id_value, packet_loss_points in packet_loss_data.items():
         time_values, packet_loss_values = zip(*packet_loss_points)
+        id_value = id_value % len(colors)
         self.ax[2, 1].plot(time_values, packet_loss_values, line,
                            linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
 

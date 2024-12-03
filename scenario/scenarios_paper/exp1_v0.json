@@ -10,7 +10,7 @@
     "size": {
       "X": "100",
       "Y": "100",
-      "Z": "70"
+      "Z": "50"
     },
     "buildings": []
   },
@@ -94,109 +94,139 @@
             "value": [
               {
                 "position": [
-                  5.0,
+                  85.0,
                   45.0,
                   0.1
                 ],
                 "interest": 0,
-                "restTime": 1.0
+                "restTime": 3.0
               },
               {
                 "position": [
-                  5.0,
+                  85.0,
                   45.0,
                   10.0
                 ],
+                "interest": 1
+              },
+              {
+                "position": [
+                  75.0,
+                  45.0,
+                  17.0
+                ],
                 "interest": 2
               },
               {
                 "position": [
-                  45.0,
-                  5.0,
-                  17.0
+                  72.94974746830583,
+                  50,
+                  17
                 ],
-                "interest": 4
+                "interest": 3
               },
               {
                 "position": [
-                  75.0,
-                  45.0,
-                  17.0
+                  72.94974746830583,
+                  54.94974746830583,
+                  17
                 ],
-                "interest": 4
+                "interest": 0,
+                "restTime": 3.0
               },
               {
                 "position": [
-                  45.0,
-                  75.0,
+                  68.0,
+                  57.0,
                   17.0
                 ],
-                "interest": 4
+                "interest": 0,
+                "restTime": 3.0
               },
               {
                 "position": [
-                  20.0,
-                  45.0,
-                  17.0
+                  63.05025253169417,
+                  54.94974746830583,
+                  17
                 ],
-                "interest": 4
+                "interest": 0,
+                "restTime": 3.0
               },
               {
                 "position": [
-                  45.0,
-                  20.0,
-                  17.0
-                ],
-                "interest": 4
-              },
-              {
-                "position": [
-                  60.0,
-                  45.0,
-                  17.0
-                ],
-                "interest": 4
-              },
-              {
-                "position": [
-                  45.0,
-                  60.0,
-                  17.0
-                ],
-                "interest": 4
-              },
-              {
-                "position": [
-                  30.0,
-                  45.0,
-                  17.0
-                ],
-                "interest": 4
-              },
-              {
-                "position": [
-                  45.0,
-                  30.0,
-                  17.0
-                ],
-                "interest": 4
-              },
-              {
-                "position": [
+                  61.0,
                   50.0,
+                  17.0
+                ],
+                "interest": 0,
+                "restTime": 3.0
+              },
+              {
+                "position": [
+                  63.05025253169417,
+                  45.05025253169417,
+                  17
+                ],
+                "interest": 0,
+                "restTime": 3.0
+              },
+              {
+                "position": [
+                  68.0,
+                  43.0,
+                  17.0
+                ],
+                "interest": 0,
+                "restTime": 3.0
+              },
+              {
+                "position": [
+                  72.94974746830583,
+                  45.05025253169417,
+                  17
+                ],
+                "interest": 4
+              },
+              {
+                "position": [
+                  75.0,
                   50.0,
                   15.0
                 ],
-                "interest": 4,
-                "restTime": 8.0
+                "interest": 3
+              },
+              {
+                "position": [
+                  72.94974746830583,
+                  54.94974746830583,
+                  15
+                ],
+                "interest": 3
+              },
+              {
+                "position": [
+                  68.0,
+                  57.0,
+                  15.0
+                ],
+                "interest": 3
               },
               {
                 "position": [
                   50.0,
-                  50.0,
-                  0.1
+                  60.0,
+                  14.0
                 ],
                 "interest": 2
+              },
+              {
+                "position": [
+                  50.0,
+                  60.0,
+                  0.1
+                ],
+                "interest": 0,
+                "restTime": 5.0
               }
             ]
           },
@@ -346,101 +376,118 @@
             "value": [
               {
                 "position": [
-                  90.0,
-                  5.0,
+                  51.0,
+                  47.0,
                   0.1
                 ],
                 "interest": 0,
-                "restTime": 1.0
-              },
-              {
-                "position": [
-                  90.0,
-                  5.0,
-                  17.0
-                ],
-                "interest": 2,
                 "restTime": 5.0
               },
               {
                 "position": [
-                  83.0,
-                  10.0,
-                  21.0
+                  51.0,
+                  50.0,
+                  8.0
                 ],
-                "interest": 2,
-                "restTime": 5.0
+                "interest": 2
+              },
+              {
+                "position": [
+                  60.0,
+                  40.0,
+                  8.0
+                ],
+                "interest": 4
               },
               {
                 "position": [
                   75.0,
-                  15.0,
-                  25.0
+                  40.0,
+                  8.0
                 ],
-                "interest": 2,
-                "restTime": 5.0
+                "interest": 5
               },
               {
                 "position": [
-                  73.0,
-                  20.0,
-                  29.0
+                  75.0,
+                  50.0,
+                  8.0
                 ],
-                "interest": 2,
-                "restTime": 5.0
+                "interest": 5
+              },
+              {
+                "position": [
+                  60.0,
+                  60.0,
+                  8.0
+                ],
+                "interest": 5
+              },
+              {
+                "position": [
+                  60.0,
+                  40.0,
+                  8.0
+                ],
+                "interest": 3
+              },
+              {
+                "position": [
+                  75.0,
+                  40.0,
+                  8.0
+                ],
+                "interest": 3
+              },
+              {
+                "position": [
+                  75.0,
+                  60.0,
+                  8.0
+                ],
+                "interest": 1
+              },
+              {
+                "position": [
+                  60.0,
+                  60.0,
+                  8.0
+                ],
+                "interest": 1
               },
               {
                 "position": [
                   67.0,
-                  27.0,
-                  33.0
+                  55.0,
+                  8.0
                 ],
-                "interest": 2,
-                "restTime": 5.0
+                "interest": 0,
+                "restTime": 3.0
               },
               {
                 "position": [
-                  62.0,
-                  32.0,
-                  37.0
-                ],
-                "interest": 2,
-                "restTime": 5.0
-              },
-              {
-                "position": [
-                  56.0,
-                  37.0,
-                  41.0
-                ],
-                "interest": 2,
-                "restTime": 5.0
-              },
-              {
-                "position": [
-                  49.0,
-                  42.0,
-                  45.0
-                ],
-                "interest": 2,
-                "restTime": 12.0
-              },
-              {
-                "position": [
-                  49.0,
-                  42.0,
-                  20.0
-                ],
-                "interest": 2,
-                "restTime": 12.0
-              },
-              {
-                "position": [
-                  45.0,
-                  45.0,
-                  0.1
+                  75.0,
+                  50.0,
+                  15.0
                 ],
                 "interest": 3
+              },
+              {
+                "position": [
+                  85.0,
+                  50.0,
+                  8.0
+                ],
+                "interest": 2
+              },
+              {
+                "position": [
+                  85.0,
+                  50.0,
+                  0.1
+                ],
+                "interest": 0,
+                "restTime": 5.0
               }
             ]
           },
@@ -587,8 +634,8 @@
           {
             "name": "Position",
             "value": [
-              47.0,
-              47.0,
+              50.0,
+              50.0,
               3
             ]
           }
