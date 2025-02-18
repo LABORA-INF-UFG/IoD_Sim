@@ -1,5 +1,5 @@
 {
-  "name": "lm_elton_scalability",
+  "name": "lm_elton_scalability_15",
   "resultsPath": "../results/",
   "logOnFile": true,
   "filteredLog": false,
