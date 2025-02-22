@@ -1,10 +1,10 @@
 {
-  "name": "lm_elton_dynamic",
+  "name": "lm_elton_scalability_1",
   "resultsPath": "../results/",
   "logOnFile": true,
   "filteredLog": false,
   "courseChangeInterval": 0.1,
-  "duration": 150,
+  "duration": 60,
   "staticNs3Config": [],
   "world": {
     "size": {
@@ -68,12 +68,12 @@
               "type": "GBR_CONV_VIDEO",
               "bitrate": {
                 "guaranteed": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 30e6,
+                  "uplink": 15e6
                 },
                 "maximum": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 60e6,
+                  "uplink": 30e6
                 }
               }
             }
@@ -86,7 +86,7 @@
           {
             "name": "SpeedCoefficients",
             "value": [
-              1.0,
+              3.0,
               0.0
             ]
           },
@@ -95,57 +95,21 @@
             "value": [
               {
                 "position": [
-                  2.0,
-                  2.0,
-                  0.1
+                  5.0,
+                  5.0,
+                  20.0
                 ],
                 "interest": 0,
                 "restTime": 1.0
               },
               {
                 "position": [
-                  8.0,
-                  8.0,
-                  120.0
+                  5.0,
+                  5.0,
+                  1000.0
                 ],
                 "interest": 0,
-                "restTime": 7.0
-              },
-              {
-                "position": [
-                  4.0,
-                  4.0,
-                  30.0
-                ],
-                "interest": 0,
-                "restTime": 3.0
-              },
-              {
-                "position": [
-                  300.0,
-                  300.0,
-                  30.0
-                ],
-                "interest": 0,
-                "restTime": 5.0
-              },
-              {
-                "position": [
-                  2.0,
-                  2.0,
-                  30.0
-                ],
-                "interest": 0,
-                "restTime": 1.0
-              },
-              {
-                "position": [
-                  2.0,
-                  2.0,
-                  0.1
-                ],
-                "interest": 0,
-                "restTime": 1.0
+                "restTime": 60.0
               }
             ]
           },
@@ -173,7 +137,7 @@
             },
             {
               "name": "TransmissionInterval",
-              "value": 0.05
+              "value": 0.1
             }
           ]
         }
@@ -200,7 +164,7 @@
         "attributes": [
           {
             "name": "LiIonEnergySourceInitialEnergyJ",
-            "value": 6000.0
+            "value": 2500.0
           },
           {
             "name": "LiIonEnergyLowBatteryThreshold",
@@ -271,16 +235,19 @@
               "type": "GBR_CONV_VIDEO",
               "bitrate": {
                 "guaranteed": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 30e6,
+                  "uplink": 10e6
                 },
                 "maximum": {
-                  "downlink": 20e6,
-                  "uplink": 5e6
+                  "downlink": 50e6,
+                  "uplink": 20e6
                 }
               }
             }
-          ]
+          ],
+          "phy": {
+            "TxPower": 49.0
+          }
         }
       ],
       "mobilityModel": {
@@ -289,9 +256,9 @@
           {
             "name": "Position",
             "value": [
-              5.0,
-              5.0,
-              1.0
+              10.0,
+              15.0,
+              5.0
             ]
           }
         ]

@@ -4,16 +4,53 @@ import matplotlib
 matplotlib.use('TkAgg')
 
 colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:gray',
-          'tab:brown', 'tab:pink', 'tab:purple', 'tab:olive', 'tab:cyan']
+          'tab:brown', 'tab:pink', 'tab:purple', 'tab:olive', 'tab:cyan',
+          'tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:gray',
+          'tab:brown', 'tab:pink', 'tab:purple', 'tab:olive', 'tab:cyan',
+          'tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:gray',
+          'tab:brown', 'tab:pink', 'tab:purple', 'tab:olive', 'tab:cyan',
+          'tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:gray',
+          'tab:brown', 'tab:pink', 'tab:purple', 'tab:olive', 'tab:cyan',
+          'tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:gray',
+          'tab:brown', 'tab:pink', 'tab:purple', 'tab:olive', 'tab:cyan',
+          'tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:gray',
+          'tab:brown', 'tab:pink', 'tab:purple', 'tab:olive', 'tab:cyan',
+          'tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:gray',
+          'tab:brown', 'tab:pink', 'tab:purple', 'tab:olive', 'tab:cyan',
+          'tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:gray',
+          'tab:brown', 'tab:pink', 'tab:purple', 'tab:olive', 'tab:cyan',
+          'tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:gray',
+          'tab:brown', 'tab:pink', 'tab:purple', 'tab:olive', 'tab:cyan',
+          'tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:gray',
+          'tab:brown', 'tab:pink', 'tab:purple', 'tab:olive', 'tab:cyan'
+          ]
 
-lines = ['dashed', 'dotted', 'dashdot', (0, (3, 5, 1, 5)), (0, (5, 1)), (0, (3, 1, 1, 1)), (0, (3, 1, 1, 1, 1, 1))]
+lines = ['dashed', 'dotted', 'dashdot', (0, (3, 5, 1, 5)), (0, (5, 1)), (0, (3, 1, 1, 1)), (0, (3, 1, 1, 1, 1, 1)),
+         'dashed', 'dotted', 'dashdot', (0, (3, 5, 1, 5)), (0, (5, 1)), (0, (3, 1, 1, 1)), (0, (3, 1, 1, 1, 1, 1)),
+         'dashed', 'dotted', 'dashdot', (0, (3, 5, 1, 5)), (0, (5, 1)), (0, (3, 1, 1, 1)), (0, (3, 1, 1, 1, 1, 1)),
+         'dashed', 'dotted', 'dashdot', (0, (3, 5, 1, 5)), (0, (5, 1)), (0, (3, 1, 1, 1)), (0, (3, 1, 1, 1, 1, 1)),
+         'dashed', 'dotted', 'dashdot', (0, (3, 5, 1, 5)), (0, (5, 1)), (0, (3, 1, 1, 1)), (0, (3, 1, 1, 1, 1, 1)),
+         'dashed', 'dotted', 'dashdot', (0, (3, 5, 1, 5)), (0, (5, 1)), (0, (3, 1, 1, 1)), (0, (3, 1, 1, 1, 1, 1)),
+         'dashed', 'dotted', 'dashdot', (0, (3, 5, 1, 5)), (0, (5, 1)), (0, (3, 1, 1, 1)), (0, (3, 1, 1, 1, 1, 1)),
+         'dashed', 'dotted', 'dashdot', (0, (3, 5, 1, 5)), (0, (5, 1)), (0, (3, 1, 1, 1)), (0, (3, 1, 1, 1, 1, 1)),
+         'dashed', 'dotted', 'dashdot', (0, (3, 5, 1, 5)), (0, (5, 1)), (0, (3, 1, 1, 1)), (0, (3, 1, 1, 1, 1, 1)),
+         'dashed', 'dotted', 'dashdot', (0, (3, 5, 1, 5)), (0, (5, 1)), (0, (3, 1, 1, 1)), (0, (3, 1, 1, 1, 1, 1)),
+         'dashed', 'dotted', 'dashdot', (0, (3, 5, 1, 5)), (0, (5, 1)), (0, (3, 1, 1, 1)), (0, (3, 1, 1, 1, 1, 1)),
+         'dashed', 'dotted', 'dashdot', (0, (3, 5, 1, 5)), (0, (5, 1)), (0, (3, 1, 1, 1)), (0, (3, 1, 1, 1, 1, 1)),
+         'dashed', 'dotted', 'dashdot', (0, (3, 5, 1, 5)), (0, (5, 1)), (0, (3, 1, 1, 1)), (0, (3, 1, 1, 1, 1, 1)),
+         'dashed', 'dotted', 'dashdot', (0, (3, 5, 1, 5)), (0, (5, 1)), (0, (3, 1, 1, 1)), (0, (3, 1, 1, 1, 1, 1)),
+         'dashed', 'dotted', 'dashdot', (0, (3, 5, 1, 5)), (0, (5, 1)), (0, (3, 1, 1, 1)), (0, (3, 1, 1, 1, 1, 1)),
+         'dashed', 'dotted', 'dashdot', (0, (3, 5, 1, 5)), (0, (5, 1)), (0, (3, 1, 1, 1)), (0, (3, 1, 1, 1, 1, 1)),
+         'dashed', 'dotted', 'dashdot', (0, (3, 5, 1, 5)), (0, (5, 1)), (0, (3, 1, 1, 1)), (0, (3, 1, 1, 1, 1, 1)),
+         'dashed', 'dotted', 'dashdot', (0, (3, 5, 1, 5)), (0, (5, 1)), (0, (3, 1, 1, 1)), (0, (3, 1, 1, 1, 1, 1)),
+         ]
 
 class Figure():
   def __init__(self, name):
     self.name = name
     self.base_station = False
     if name == "Flight Path":
-      plt.rcParams.update({'font.size': 10})
+      plt.rcParams.update({'font.size': 15})
       self.fig = plt.figure(figsize=(12, 8))
       self.ax = self.fig.add_subplot(111, projection='3d')
       self._format_flight_path()
@@ -65,10 +102,24 @@ class Figure():
         self.ax[0, 0].plot(time_values, delay_values, line,
                            linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
 
+    #for id_value, throughput_points in throughput_data.items():
+    #    time_values, throughput_values = zip(*throughput_points)
+    #    self.ax[0, 1].plot(time_values, throughput_values, line,
+    #                       linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
+
     for id_value, throughput_points in throughput_data.items():
-        time_values, throughput_values = zip(*throughput_points)
-        self.ax[0, 1].plot(time_values, throughput_values, line,
-                           linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
+      time_values, throughput_values = zip(*throughput_points)
+
+      # Convert tuples to lists for modification
+      time_values = list(time_values)
+      throughput_values = list(throughput_values)
+
+      # Modify throughput_values based on time_values
+      modified_throughput_values = [thr if t > 2.0 else 0 for t, thr in zip(time_values, throughput_values)]
+
+      # Plot the modified throughput_values
+      self.ax[0, 1].plot(time_values, modified_throughput_values, line,
+                        linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
 
     for id_value, jitter_points in jitter_data.items():
         time_values, jitter_values = zip(*jitter_points)
@@ -79,16 +130,41 @@ class Figure():
         time_values, tx_power_values = zip(*tx_power_points)
         self.ax[1, 1].plot(time_values, tx_power_values, line,
                            linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
+    # exp 2
+    #self.ax[1, 1].annotate('Ascends', xy=(17, 0), xytext=(-7, -15), textcoords='offset points', arrowprops=dict(arrowstyle='->', color='black'), fontsize=11, horizontalalignment="right")
+    #self.ax[1, 1].annotate('Descends', xy=(37, 15), xytext=(-15, 15), textcoords='offset points', arrowprops=dict(arrowstyle='->', color='black'), fontsize=11)
+    #self.ax[1, 1].annotate('Far from the\nBase Station', xy=(69, 7), xytext=(15, -40), textcoords='offset points', arrowprops=dict(arrowstyle='->', color='black'), fontsize=11, horizontalalignment="right")
+    #self.ax[1, 1].annotate('Reconnected', xy=(103, 5), xytext=(15, 15), textcoords='offset points', arrowprops=dict(arrowstyle='->', color='black'), fontsize=11)
 
     for id_value, battery_points in battery_data.items():
         time_values, battery_values = zip(*battery_points)
         self.ax[2, 0].plot(time_values, battery_values, line,
                            linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
+    # exp 2
+    #self.ax[2,0].annotate('Return to Base Station', xy=(75, 2900), xytext=(15, 15), textcoords='offset points', arrowprops=dict(arrowstyle='->', color='black'), fontsize=11)
+
+    #for id_value, packet_loss_points in packet_loss_data.items():
+    #    time_values, packet_loss_values = zip(*packet_loss_points)
+    #    self.ax[2, 1].plot(time_values, packet_loss_values, line,
+    #                       linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
 
     for id_value, packet_loss_points in packet_loss_data.items():
-        time_values, packet_loss_values = zip(*packet_loss_points)
-        self.ax[2, 1].plot(time_values, packet_loss_values, line,
-                           linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
+      time_values, packet_loss_values = zip(*packet_loss_points)
+
+      # Convert tuples to lists for modification
+      time_values = list(time_values)
+      packet_loss_values = list(packet_loss_values)
+
+      # Cap packet_loss_values at 100
+      capped_packet_loss_values = [min(pl, 100) for pl in packet_loss_values]
+
+      # Plot the capped packet_loss_values
+      self.ax[2, 1].plot(time_values, capped_packet_loss_values, line,
+                        linestyle=lines[id_value], label=f'Drone {id_value}', color=colors[id_value])
+    # exp 2
+    #self.ax[2, 1].annotate('Lost\nconnection', xy=(68, 30), xytext=(-15, -15), textcoords='offset points', arrowprops=dict(arrowstyle='->', color='black'), fontsize=11, horizontalalignment="right")
+    #self.ax[2, 1].annotate('Reestablished\nconnection', xy=(102, 30), xytext=(15, -15), textcoords='offset points', arrowprops=dict(arrowstyle='->', color='black'), fontsize=11)
+
 
     self._format_metrics()
 
@@ -105,14 +181,14 @@ class Figure():
       for j in range(0, 2):
         self.ax[i, j].legend()
         self.ax[i, j].grid(True)
-    self.ax[0, 0].set_ylabel('Delay (ns)')
+    self.ax[0, 0].set_ylabel('Delay (ms)')
     self.ax[0, 1].set_ylabel('Throughput (kbps)')
-    self.ax[1, 0].set_ylabel('Jitter (ns)')
+    self.ax[1, 0].set_ylabel('Jitter (ms)')
     self.ax[1, 1].set_ylabel('TX Power (dBm)')
     self.ax[2, 0].set_ylabel('Battery (mAh)')
     self.ax[2, 1].set_ylabel('Packet loss (%)')
-    self.ax[2, 0].set_xlabel('Time (s)')
-    self.ax[2, 1].set_xlabel('Time (s)')
+    self.ax[2, 0].set_xlabel('Simulated Time (s)')
+    self.ax[2, 1].set_xlabel('Simulated Time (s)')
     # self.fig.suptitle("Scenario Metrics")
 
 

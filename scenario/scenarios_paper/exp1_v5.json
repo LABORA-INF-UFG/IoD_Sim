@@ -4,7 +4,7 @@
   "logOnFile": true,
   "filteredLog": false,
   "courseChangeInterval": 0.1,
-  "duration": 120,
+  "duration": 130,
   "staticNs3Config": [],
   "world": {
     "size": {
@@ -183,17 +183,17 @@
               },
               {
                 "position": [
-                  135.0,
-                  135.0,
+                  95.0,
+                  85.0,
                   45.0
                 ],
                 "interest": 4,
-                "restTime": 8.0
+                "restTime": 1.0
               },
               {
                 "position": [
-                  135.0,
-                  135.0,
+                  95.0,
+                  85.0,
                   0.1
                 ],
                 "interest": 2
@@ -251,7 +251,7 @@
         "attributes": [
           {
             "name": "LiIonEnergySourceInitialEnergyJ",
-            "value": 2500.0
+            "value": 5000.0
           },
           {
             "name": "LiIonEnergyLowBatteryThreshold",
@@ -346,8 +346,8 @@
             "value": [
               {
                 "position": [
-                  280.0,
-                  16.0,
+                  134.0,
+                  144.0,
                   0.1
                 ],
                 "interest": 0,
@@ -355,54 +355,18 @@
               },
               {
                 "position": [
-                  280.0,
-                  16.0,
-                  17.0
+                  142.0,
+                  144.0,
+                  30.0
                 ],
                 "interest": 2,
                 "restTime": 6.0
               },
               {
                 "position": [
-                  260.0,
-                  30.0,
-                  21.0
-                ],
-                "interest": 2,
-                "restTime": 5.0
-              },
-              {
-                "position": [
-                  225.0,
-                  48.0,
-                  25.0
-                ],
-                "interest": 2,
-                "restTime": 5.0
-              },
-              {
-                "position": [
-                  218.0,
-                  64.0,
-                  29.0
-                ],
-                "interest": 2,
-                "restTime": 5.0
-              },
-              {
-                "position": [
-                  199.0,
-                  84.0,
-                  33.0
-                ],
-                "interest": 2,
-                "restTime": 5.0
-              },
-              {
-                "position": [
-                  184.0,
-                  102.0,
-                  37.0
+                  142.0,
+                  135.0,
+                  60.0
                 ],
                 "interest": 2,
                 "restTime": 5.0
@@ -411,24 +375,60 @@
                 "position": [
                   164.0,
                   118.0,
-                  41.0
+                  90.0
                 ],
                 "interest": 2,
                 "restTime": 5.0
               },
               {
                 "position": [
-                  142.0,
-                  135.0,
-                  45.0
+                  184.0,
+                  102.0,
+                  120.0
+                ],
+                "interest": 2,
+                "restTime": 5.0
+              },
+              {
+                "position": [
+                  199.0,
+                  84.0,
+                  100.0
+                ],
+                "interest": 2,
+                "restTime": 5.0
+              },
+              {
+                "position": [
+                  218.0,
+                  64.0,
+                  80.0
+                ],
+                "interest": 2,
+                "restTime": 5.0
+              },
+              {
+                "position": [
+                  225.0,
+                  48.0,
+                  60.0
+                ],
+                "interest": 2,
+                "restTime": 5.0
+              },
+              {
+                "position": [
+                  260.0,
+                  30.0,
+                  40.0
                 ],
                 "interest": 2,
                 "restTime": 12.0
               },
               {
                 "position": [
-                  142.0,
-                  144.0,
+                  330.0,
+                  16.0,
                   20.0
                 ],
                 "interest": 2,
@@ -436,8 +436,8 @@
               },
               {
                 "position": [
-                  134.0,
-                  144.0,
+                  330.0,
+                  16.0,
                   0.1
                 ],
                 "interest": 3
@@ -495,7 +495,7 @@
         "attributes": [
           {
             "name": "LiIonEnergySourceInitialEnergyJ",
-            "value": 2500.0
+            "value": 6000.0
           },
           {
             "name": "LiIonEnergyLowBatteryThreshold",

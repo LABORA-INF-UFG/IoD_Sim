@@ -96,6 +96,7 @@ def main_window():
                     if result.status_code == 200:
                         start_scenario_visualizer()
                         iodsim_running = True
+
                     else:
                         sg.popup(
                             f"Unspected error: [{result.status_code}] {result.text}", title='Error')

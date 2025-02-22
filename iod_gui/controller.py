@@ -5,6 +5,7 @@ import os
 from threading import Thread
 from collections import defaultdict
 import subprocess
+from collect_system_usage import collect_system_usage, stop_collecting_system_usage  # Import the functions
 
 working_directory = os.getcwd()
 config_values = {}
@@ -24,6 +25,7 @@ sum_delay = {}
 sub_delay = {}
 sum_sendp = {}
 sum_lostp = {}
+iodsim_pid = None
 
 def start_scenario_visualizer():
     if working_directory.endswith("IoD_Sim"):
@@ -35,11 +37,21 @@ def start_scenario_visualizer():
 
 
 def start_iodsim():
+    global iodsim_pid
     if working_directory.endswith("IoD_Sim"):
+        process = subprocess.Popen(f'cd ns3/ && ./ns3 run iodsim', shell=True, stdout=subprocess.PIPE)
+        iodsim_pid = process.pid
+        return process
         return subprocess.Popen(f'cd ns3/ && ./ns3 run iodsim', shell=True, stdout=subprocess.PIPE)
     if working_directory.endswith("ns3"):
+        process = subprocess.Popen(f'./ns3 run iodsim', shell=True, stdout=subprocess.PIPE)
+        iodsim_pid = process.pid
+        return process
         return subprocess.Popen(f'./ns3 run iodsim', shell=True, stdout=subprocess.PIPE)
     if working_directory.endswith("iod_gui"):
+        process = subprocess.Popen(f'cd ../ns3 && ./ns3 run iodsim', shell=True, stdout=subprocess.PIPE)
+        iodsim_pid = process.pid
+        return process
         return subprocess.Popen(f'cd ../ns3 && ./ns3 run iodsim', shell=True, stdout=subprocess.PIPE)
 
 
@@ -78,6 +90,9 @@ def request_metrics():
     method = 'GET'
     address = 'http://127.0.0.1:18080/get_realtime_metrics'
     result = call_rest_api(method, address)
+    # Start 'collect_system_usage' function in a separate thread
+    usage_thread = Thread(target=collect_system_usage, args=(iodsim_pid,))
+    usage_thread.start()
     while result != None:
         if result.status_code != 200:
             print(f"Result: \n[{result.status_code}] {result.text}")
@@ -142,6 +157,9 @@ def request_metrics():
                     (time_value, location_value))
 
         result = call_rest_api(method, address)
+    # Stop 'collect_system_usage' function
+    stop_collecting_system_usage()
+    usage_thread.join()
 
 
 request_metrics_thread = Thread(target=request_metrics)
